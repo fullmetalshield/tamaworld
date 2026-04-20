@@ -1,0 +1,270 @@
+[gd_scene load_steps=7 format=3 uid="uid://b0tamaa0a0004"]
+
+[ext_resource type="Script" path="res://scripts/FamilyTree.gd" id="1_ft"]
+[ext_resource type="PackedScene" path="res://scenes/Tamagotchi.tscn" id="2_tama"]
+[ext_resource type="PackedScene" path="res://scenes/Hud.tscn" id="3_hud"]
+[ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="4_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_banner"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0.984, 0.82, 0.831, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.55, 0.62, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+shadow_color = Color(0, 0, 0, 0.12)
+shadow_size = 6
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_viewport"]
+bg_color = Color(1, 1, 1, 0)
+
+[node name="FamilyTree" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_ft")
+
+[node name="BackdropOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+theme_override_constants/separation = 8
+
+[node name="Hud" parent="VBox" instance=ExtResource("3_hud")]
+layout_mode = 2
+
+[node name="StageViewport" type="Panel" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+clip_contents = true
+theme_override_styles/panel = SubResource("StyleBox_viewport")
+
+[node name="StageCanvas" type="Control" parent="VBox/StageViewport"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_right = 250.0
+offset_bottom = 268.0
+mouse_filter = 2
+
+[node name="Slot1" type="Control" parent="VBox/StageViewport/StageCanvas"]
+layout_mode = 1
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 115.0
+offset_bottom = 118.0
+mouse_filter = 2
+
+[node name="Stage1" type="SubViewportContainer" parent="VBox/StageViewport/StageCanvas/Slot1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="SubViewport" type="SubViewport" parent="VBox/StageViewport/StageCanvas/Slot1/Stage1"]
+handle_input_locally = false
+size = Vector2i(115, 118)
+render_target_update_mode = 4
+transparent_bg = true
+
+[node name="Tama1" parent="VBox/StageViewport/StageCanvas/Slot1/Stage1/SubViewport" instance=ExtResource("2_tama")]
+unique_name_in_owner = true
+scale = Vector2(0.5, 0.5)
+
+[node name="FloatingName1" type="Label" parent="VBox/StageViewport/StageCanvas/Slot1"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -80.0
+offset_top = -15.0
+offset_right = 80.0
+offset_bottom = 15.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 22
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Slot2" type="Control" parent="VBox/StageViewport/StageCanvas"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 135.0
+offset_top = 0.0
+offset_right = 250.0
+offset_bottom = 118.0
+mouse_filter = 2
+visible = false
+
+[node name="Stage2" type="SubViewportContainer" parent="VBox/StageViewport/StageCanvas/Slot2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="SubViewport" type="SubViewport" parent="VBox/StageViewport/StageCanvas/Slot2/Stage2"]
+handle_input_locally = false
+size = Vector2i(115, 118)
+render_target_update_mode = 4
+transparent_bg = true
+
+[node name="Tama2" parent="VBox/StageViewport/StageCanvas/Slot2/Stage2/SubViewport" instance=ExtResource("2_tama")]
+unique_name_in_owner = true
+scale = Vector2(0.5, 0.5)
+
+[node name="FloatingName2" type="Label" parent="VBox/StageViewport/StageCanvas/Slot2"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -80.0
+offset_top = -15.0
+offset_right = 80.0
+offset_bottom = 15.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 22
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Slot3" type="Control" parent="VBox/StageViewport/StageCanvas"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 67.0
+offset_top = 150.0
+offset_right = 182.0
+offset_bottom = 268.0
+mouse_filter = 2
+visible = false
+
+[node name="Stage3" type="SubViewportContainer" parent="VBox/StageViewport/StageCanvas/Slot3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="SubViewport" type="SubViewport" parent="VBox/StageViewport/StageCanvas/Slot3/Stage3"]
+handle_input_locally = false
+size = Vector2i(115, 118)
+render_target_update_mode = 4
+transparent_bg = true
+
+[node name="Tama3" parent="VBox/StageViewport/StageCanvas/Slot3/Stage3/SubViewport" instance=ExtResource("2_tama")]
+unique_name_in_owner = true
+scale = Vector2(0.5, 0.5)
+
+[node name="FloatingName3" type="Label" parent="VBox/StageViewport/StageCanvas/Slot3"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -80.0
+offset_top = -15.0
+offset_right = 80.0
+offset_bottom = 15.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 22
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ZoomSlider" type="VSlider" parent="VBox/StageViewport"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -32.0
+offset_top = -140.0
+offset_right = -8.0
+offset_bottom = -8.0
+mouse_default_cursor_shape = 2
+min_value = 0.4
+max_value = 2.5
+step = 0.05
+value = 1.0
+
+[node name="Footer" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="ResetButton" type="Button" parent="VBox/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+text = "가족 초기화"
+
+[node name="EventBanner" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -40.0
+offset_right = 220.0
+offset_bottom = 40.0
+theme_override_styles/panel = SubResource("StyleBox_banner")
+
+[node name="HBox" type="HBoxContainer" parent="EventBanner"]
+theme_override_constants/separation = 12
+
+[node name="EventBannerLabel" type="Label" parent="EventBanner/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.38, 0.20, 0.26, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 18
+text = "이벤트"
+vertical_alignment = 1
+
+[node name="EventBannerAccept" type="Button" parent="EventBanner/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+text = "결혼하기"

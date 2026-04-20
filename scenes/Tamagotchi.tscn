@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0tamaa0a0001"]
+
+[ext_resource type="Script" path="res://scripts/Tamagotchi.gd" id="1_tama"]
+
+[node name="Tamagotchi" type="Node2D"]
+script = ExtResource("1_tama")

@@ -1,0 +1,104 @@
+[gd_scene load_steps=6 format=3 uid="uid://b0tamaa0a0005"]
+
+[ext_resource type="Script" path="res://scripts/Hud.gd" id="1_hud"]
+[ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="2_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_hud_panel"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(1, 1, 1, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.984, 0.82, 0.831, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_home_btn"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.984, 0.82, 0.831, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_home_btn_hover"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(0.984, 0.82, 0.831, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.55, 0.62, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[node name="Hud" type="HBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+theme_override_constants/separation = 8
+script = ExtResource("1_hud")
+
+[node name="HudPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBox_hud_panel")
+
+[node name="HBox" type="HBoxContainer" parent="HudPanel"]
+theme_override_constants/separation = 12
+
+[node name="DayLabel" type="Label" parent="HudPanel/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.38, 0.20, 0.26, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "1일차"
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="HudPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TimeLabel" type="Label" parent="HudPanel/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.28, 0.34, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "오전 8:00"
+vertical_alignment = 1
+
+[node name="HomeButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBox_home_btn")
+theme_override_styles/hover = SubResource("StyleBox_home_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBox_home_btn_hover")
+theme_override_styles/focus = SubResource("StyleBox_home_btn")
+text = "홈"

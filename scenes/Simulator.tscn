@@ -1,0 +1,67 @@
+[gd_scene load_steps=3 format=3 uid="uid://b0tamaa0a0003"]
+
+[ext_resource type="Script" path="res://scripts/Simulator.gd" id="1_sim"]
+[ext_resource type="PackedScene" path="res://scenes/Tamagotchi.tscn" id="2_tama"]
+
+[node name="Simulator" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_sim")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+
+[node name="Controls" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BodyLabel" type="Label" parent="VBox/Controls"]
+layout_mode = 2
+text = "Body:"
+
+[node name="BodyPicker" type="OptionButton" parent="VBox/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="EyesLabel" type="Label" parent="VBox/Controls"]
+layout_mode = 2
+text = "Eyes:"
+
+[node name="EyesPicker" type="OptionButton" parent="VBox/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ColorLabel" type="Label" parent="VBox/Controls"]
+layout_mode = 2
+text = "Color:"
+
+[node name="ColorPicker" type="ColorPickerButton" parent="VBox/Controls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+
+[node name="StageCenter" type="CenterContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Stage" type="SubViewportContainer" parent="VBox/StageCenter"]
+custom_minimum_size = Vector2(230, 236)
+layout_mode = 2
+
+[node name="SubViewport" type="SubViewport" parent="VBox/StageCenter/Stage"]
+handle_input_locally = false
+size = Vector2i(230, 236)
+render_target_update_mode = 4
+transparent_bg = true
+
+[node name="Tama" parent="VBox/StageCenter/Stage/SubViewport" instance=ExtResource("2_tama")]
+unique_name_in_owner = true

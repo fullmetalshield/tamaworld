@@ -1,0 +1,137 @@
+[gd_scene load_steps=16 format=3 uid="uid://b0tamaa0a0002"]
+
+[ext_resource type="Script" path="res://scripts/Main.gd" id="0_main"]
+[ext_resource type="PackedScene" path="res://scenes/Simulator.tscn" id="1_sim"]
+[ext_resource type="PackedScene" path="res://scenes/FamilyTree.tscn" id="2_ft"]
+[ext_resource type="Shader" path="res://shaders/polkadot_bg.gdshader" id="3_dots"]
+[ext_resource type="PackedScene" path="res://scenes/MainScreen.tscn" id="4_ms"]
+[ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="5_font"]
+[ext_resource type="PackedScene" path="res://scenes/NameInputScreen.tscn" id="6_nis"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bg"]
+shader = ExtResource("3_dots")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_panel"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_tabbar"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_tab_selected"]
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+bg_color = Color(0.984, 0.82, 0.831, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_tab_unselected"]
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+bg_color = Color(1, 1, 1, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_color = Color(0.94, 0.88, 0.92, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_tab_hovered"]
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+bg_color = Color(0.996, 0.91, 0.92, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+anti_aliasing_size = 1.5
+
+[sub_resource type="Theme" id="Theme_tabs"]
+TabContainer/colors/font_selected_color = Color(0.38, 0.2, 0.26, 1)
+TabContainer/colors/font_unselected_color = Color(0.55, 0.5, 0.54, 1)
+TabContainer/colors/font_hovered_color = Color(0.45, 0.25, 0.32, 1)
+TabContainer/constants/side_margin = 16
+TabContainer/font_sizes/font_size = 18
+TabContainer/styles/panel = SubResource("StyleBoxEmpty_panel")
+TabContainer/styles/tabbar_background = SubResource("StyleBoxEmpty_tabbar")
+TabContainer/styles/tab_selected = SubResource("StyleBox_tab_selected")
+TabContainer/styles/tab_unselected = SubResource("StyleBox_tab_unselected")
+TabContainer/styles/tab_hovered = SubResource("StyleBox_tab_hovered")
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_home_btn"]
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
+bg_color = Color(1, 1, 1, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.984, 0.82, 0.831, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_home_btn_hover"]
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
+bg_color = Color(0.984, 0.82, 0.831, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.55, 0.62, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+anti_aliasing_size = 1.5
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("0_main")
+
+[node name="Background" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_bg")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="MainScreen" parent="." instance=ExtResource("4_ms")]
+unique_name_in_owner = true
+
+[node name="NameInputScreen" parent="." instance=ExtResource("6_nis")]
+unique_name_in_owner = true
+visible = false
+
+[node name="Tabs" type="TabContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = SubResource("Theme_tabs")
+tabs_visible = false
+visible = false
+
+[node name="가계도" parent="Tabs" instance=ExtResource("2_ft")]
+layout_mode = 2
+
+[node name="시뮬레이터" parent="Tabs" instance=ExtResource("1_sim")]
+layout_mode = 2
+visible = false
+
