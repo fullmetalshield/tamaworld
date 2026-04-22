@@ -81,3 +81,33 @@ Godot_v4.6.2-stable_win64.exe --path <project-root>
 - **이름 5px 상향**: FloatingName offsets offset_top=-10 → -15, offset_bottom=20 → 15. 라벨이 위로 5px 이동해 캐릭터와의 간격 +5.
 - **초기 뷰 주인공 중심**: `FamilyTree.gd._center_on_protagonist` 추가 — StageCanvas 중앙 좌표와 Slot1 중앙 좌표의 차만큼 `_pan` 설정해 viewport 중앙에 주인공이 오도록. `_ready`와 `_on_reset_pressed`에서 호출. 배우자/자식 슬롯은 오른쪽/아래로 화면 밖에 배치되며 사용자가 드래그로 탐색.
 - **주인공 중앙 배치 재구현**: 기존 StageCanvas를 CENTER 앵커(offsets -125..125)로 두면 Slot1(0,0)이 좌상단이라 중앙이 아닌 좌상단에 표시되던 문제. StageCanvas를 TOP_LEFT 앵커로 변경하고(`offset_right=250, offset_bottom=268`), `_center_on_protagonist`가 `stage_viewport.size * 0.5 - slot1_centre`로 `_canvas_base`를 직접 계산 → Slot1 중심이 viewport 정확히 중앙. `_pan`은 0에서 시작, 사용자 드래그 후 가산.
+- **주인공 중앙 정렬 타이밍 수정**: `_ready`에서 `await get_tree().process_frame` 한 번으로 `_center_on_protagonist`를 호출했지만, FamilyTree가 TabContainer 안에 있고 시작 시 `tabs.visible=false`라 viewport.size가 아직 0인 상태였음. 결과적으로 잘못된 위치 계산. 수정: 센터링 로직을 `_on_visibility_changed`로 이동, `is_visible_in_tree()` 후 `process_frame` 두 번 대기 → 레이아웃 settling 보장. 매번 화면 보일 때마다 재중앙정렬.
+- **주인공 중앙 정렬 로직 견고화**: 
+  1. **타이밍**: `await process_frame` 두 번도 viewport.size가 0인 케이스(컨테이너 layout 지연) 있어 `stage_viewport.resized` 시그널을 추가 연결. 사이즈가 정해지면 자동으로 `_center_on_protagonist` 트리거.
+  2. **줌 보정**: 기존 `viewport_size/2 - slot1_centre` 공식이 zoom=1일 때만 정확. pivot_offset이 캔버스 중심이라 줌 적용 시 슬롯 중심이 다르게 이동. 새 공식: `_canvas_base = viewport/2 - canvas_half - (slot1_centre - canvas_half) * zoom` — 줌과 무관하게 슬롯 중심을 viewport 중심에 정확히 매핑.
+  3. **유저 입력 보존**: resize 핸들러가 `_pan != ZERO || _zoom != 1`이면 재중앙정렬 스킵 → 사용자가 드래그/줌한 위치를 리사이즈 후에도 유지.
+- **캐릭터 호버 커서**: Slot1/2/3에 `mouse_filter = 1`(PASS) + `mouse_default_cursor_shape = 2`(CURSOR_POINTING_HAND). PASS라 마우스 이벤트는 부모 StageViewport로 통과되어 드래그/줌 영향 없이 커서만 변경.
+- **캐릭터 클릭 → 모달**: `scenes/CharacterModal.tscn` + `scripts/CharacterModal.gd` 신규. 풀스크린 반투명 검정 backdrop + 중앙 흰 PanelContainer(핑크 테두리, drop shadow). 내부에 캐릭터 이름 + 플레이스홀더 라벨("(상태 / 행동 영역 — 추후 추가 예정)") + 하단 "확인" 버튼. `FamilyTree.gd`가 각 슬롯의 `gui_input` 시그널에 연결, 클릭/드래그를 거리(6px) 임계값으로 구분해 진짜 클릭일 때만 모달 표시. `_get_slot`/`_pet_for_slot` 헬퍼로 슬롯 인덱스 → 해당 펫 매핑.
+  - **TODO (추후 구현 예정)**:
+    1. 모달 내부에 캐릭터 직업(job) 표시 — 직업 시스템 자체 설계 필요
+    2. 능력치(stats) 표시 — 어떤 능력치(체력/지력/매력/근력 등)를 둘지 정의 + PetStore 스키마 확장 + 갱신 로직
+    3. 캐릭터 행동 선택 버튼 — 가능한 행동(예: 일하기/공부하기/놀기/먹기/쉬기) 정의 + 각 행동이 능력치/시간/이벤트에 미치는 영향 정의
+    4. 모달 레이아웃을 좌측(스탯) / 우측(행동) 2단 또는 탭형으로 확장
+    5. 직업/능력치/행동에 따른 결혼/자식 유전 영향 (옵션)
+- **능력치 + 나이 + 수명 시스템**: 신규 `scripts/Stats.gd` (RefCounted, static API). 능력치 6종(`strength/intelligence/charisma/stamina/agility/luck` = 근력/지능/매력/체력/민첩/운), 1~10 정수. 수명은 출생 시 1~3 게임일 랜덤(개발용 상수 `LIFESPAN_MINUTES_MIN/MAX`, 추후 한 곳만 수정).
+  - **나이 곡선 4단계**: 유년기(0~20% 수명, 배율 0.3→0.7) → 청년기(20~60%, 0.7→1.0) → 노년기(60~100%, 1.0→0.3) → 사망(>=100%, 모든 값 0). 표시 능력치 = base × age_factor.
+  - **유전**: 자식 베이스 능력치 = `(부모A + 부모B) / 2 + randf_range(-2, 2)`, 1~10 클램프. body/eyes/color는 기존 45/45/10 유전 유지.
+  - **PetStore 스키마 확장**: `stats`, `lifespan_minutes`, `died_at_minutes` 필드 추가. `_migrate_pets()`로 옛 저장 파일에 누락 필드 자동 backfill.
+  - **EventManager 사망 감지**: `_check_deaths()`가 매 game minute tick마다 모든 펫의 수명 체크, 만료 시 `died_at_minutes` 기록 + `pet_died` 시그널 발행 + persist.
+  - **CharacterModal 확장**: 플레이스홀더 → 나이 라벨(`"3일차 / 5일 (청년기)"`) + `GridContainer(columns=3)`로 능력치 6행(라벨 + ProgressBar + `값/10`). 사망 펫은 회색 톤 + `"사망 (X일 살았음)"` 표시.
+  - **추후 연동 포인트**: 직업 시스템은 `current_stats(pet, now)` 결과를 임계값 비교해 직업 적성 판정. 행동 버튼은 `pet["stats"][k] += delta` 직접 갱신 후 `PetStore.persist()`.
+- **주인공 초기 위치 50px 상향**: `_PROTAGONIST_VIEW_OFFSET = Vector2(0, -50)` 상수 추가, `_center_on_protagonist`의 `_canvas_base` 계산에 가산. 자식 슬롯이 아래쪽에 위치하므로 주인공을 약간 위로 올려서 자식 등장 시 화면에 자연스럽게 들어오는 여백 확보.
+- **자녀 출생 시 사용자 이름 입력 + 추천 버튼**: 
+  - `EventManager`의 자녀 출생 흐름 변경 — 자동 생성 → 시간 도래 시 `child_naming_requested(parent_a, parent_b)` 시그널만 발행하고 `_pending_child_parents`에 부모 보관. 사용자가 이름 확정 시 `confirm_child_birth(name)`이 실제로 `Genetics.create_child` + `PetStore.add_pet` + `child_born` 발행.
+  - `NameInputScreen.tscn`에 "추천" 버튼 추가(LineEdit 우측 HBox). 클릭 시 `PetStore.GIVEN_NAMES`에서 랜덤 추출해 입력칸에 채워줌. 사용자는 그대로 확인하거나 수정 가능. 결정은 항상 사용자.
+  - `NameInputScreen.gd`: `set_prompt(text)` API로 프롬프트 문구 컨텍스트별 변경. 주인공/자녀 양쪽에서 재사용.
+  - `Main.gd`: `_naming_context` 상태(`"protagonist"|"child"`)로 confirm 시 분기. `EventManager.child_naming_requested` 구독해 자녀 이벤트 발생 시 `_open_child_naming()`. 세션 복원 시 보류된 자녀가 있으면 START 후 즉시 네이밍 화면으로.
+- **자녀 출생 모달 분리**: 자녀 이름 받기를 풀스크린 NameInputScreen 재사용에서 전용 모달로 분리. `EventManager`가 자녀 시간 도래 시 `Genetics.create_child`로 **미리 굴림**(body/eyes/color/stats 결정)해서 `_pending_child` 보관 → `child_naming_requested(pending_child)` 발행. `confirm_child_birth(name)`에서 given_name만 갱신해 `add_pet`. `pending_child()` getter도 추가(세션 복원용).
+  - 신규 `scenes/ChildBirthModal.tscn` + `scripts/ChildBirthModal.gd` — 반투명 backdrop + 380×380 라운드 패널. 구성: "자녀가 태어났습니다." → SubViewport(115×118)에 미리 굴린 자녀 캐릭터 표시 → 이름 입력 + 추천 버튼 HBox → 확인 버튼.
+  - `FamilyTree.tscn`에 모달 인스턴스 추가, `FamilyTree.gd`가 `child_naming_requested` 구독 → `child_birth_modal.show_for(pending)`. `_on_child_born` 핸들러의 "자녀가 태어났습니다!" 배너/3초 타이머 제거(모달이 그 역할 대체).
+- **가족 초기화 후 주인공 네이밍 분기 버그 수정**: 이전 변경에서 `_naming_context` 상태가 stale로 남아 reset 후에도 자녀 confirm 분기로 들어가던 버그. `Main.gd`를 주인공 전용으로 단순화(상태 변수 제거, EventManager 구독 제거). 자녀 네이밍은 FamilyTree 내부 모달이 전담하므로 책임 분리도 명확해짐.

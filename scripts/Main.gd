@@ -15,6 +15,9 @@ func _show_title() -> void:
 	tabs.visible = false
 
 func _show_naming() -> void:
+	# Only ever used for the protagonist; child naming is a modal inside
+	# FamilyTree so the gameplay scene stays visible behind it.
+	name_input.set_prompt("다마고치의 이름을 지어주세요")
 	main_screen.visible = false
 	name_input.visible = true
 	tabs.visible = false

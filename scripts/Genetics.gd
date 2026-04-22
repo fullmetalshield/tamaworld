@@ -21,6 +21,9 @@ static func create_child(parent_a: Dictionary, parent_b: Dictionary, all_pets: A
 		"spouse_id": null,
 		"born_at_minutes": born_at_minutes,
 		"married_at_minutes": null,
+		"stats": Stats.inherit_stats(parent_a.get("stats", {}), parent_b.get("stats", {})),
+		"lifespan_minutes": Stats.random_lifespan_minutes(),
+		"died_at_minutes": null,
 	}
 	for gene in GENES:
 		child[gene] = _roll_gene(gene, parent_a, parent_b, ancestors)

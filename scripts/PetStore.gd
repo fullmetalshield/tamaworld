@@ -25,6 +25,23 @@ static func ensure_loaded() -> void:
 		var parsed: Variant = JSON.parse_string(text)
 		if parsed is Array:
 			_pets = parsed
+	_migrate_pets()
+
+# Backfill missing fields on pets loaded from older save files.
+static func _migrate_pets() -> void:
+	var changed := false
+	for pet in _pets:
+		if not pet.has("stats"):
+			pet["stats"] = Stats.random_base_stats()
+			changed = true
+		if not pet.has("lifespan_minutes"):
+			pet["lifespan_minutes"] = Stats.random_lifespan_minutes()
+			changed = true
+		if not pet.has("died_at_minutes"):
+			pet["died_at_minutes"] = null
+			changed = true
+	if changed:
+		persist()
 
 static func create_protagonist(name: String) -> Dictionary:
 	var pet := generate_random_pet({"given_name": name})
@@ -104,6 +121,9 @@ static func generate_random_pet(overrides: Dictionary = {}) -> Dictionary:
 		"spouse_id": null,
 		"born_at_minutes": 0,
 		"married_at_minutes": null,
+		"stats": Stats.random_base_stats(),
+		"lifespan_minutes": Stats.random_lifespan_minutes(),
+		"died_at_minutes": null,
 	}
 	for k in overrides:
 		pet[k] = overrides[k]

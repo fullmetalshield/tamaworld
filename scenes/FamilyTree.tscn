@@ -1,9 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://b0tamaa0a0004"]
+[gd_scene load_steps=8 format=3 uid="uid://b0tamaa0a0004"]
 
 [ext_resource type="Script" path="res://scripts/FamilyTree.gd" id="1_ft"]
 [ext_resource type="PackedScene" path="res://scenes/Tamagotchi.tscn" id="2_tama"]
 [ext_resource type="PackedScene" path="res://scenes/Hud.tscn" id="3_hud"]
 [ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="4_font"]
+[ext_resource type="PackedScene" path="res://scenes/CharacterModal.tscn" id="5_modal"]
+[ext_resource type="PackedScene" path="res://scenes/ChildBirthModal.tscn" id="6_cbm"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_banner"]
 content_margin_left = 14.0
@@ -77,7 +79,8 @@ offset_left = 0.0
 offset_top = 0.0
 offset_right = 115.0
 offset_bottom = 118.0
-mouse_filter = 2
+mouse_filter = 1
+mouse_default_cursor_shape = 2
 
 [node name="Stage1" type="SubViewportContainer" parent="VBox/StageViewport/StageCanvas/Slot1"]
 layout_mode = 1
@@ -121,7 +124,8 @@ offset_left = 135.0
 offset_top = 0.0
 offset_right = 250.0
 offset_bottom = 118.0
-mouse_filter = 2
+mouse_filter = 1
+mouse_default_cursor_shape = 2
 visible = false
 
 [node name="Stage2" type="SubViewportContainer" parent="VBox/StageViewport/StageCanvas/Slot2"]
@@ -166,7 +170,8 @@ offset_left = 67.0
 offset_top = 150.0
 offset_right = 182.0
 offset_bottom = 268.0
-mouse_filter = 2
+mouse_filter = 1
+mouse_default_cursor_shape = 2
 visible = false
 
 [node name="Stage3" type="SubViewportContainer" parent="VBox/StageViewport/StageCanvas/Slot3"]
@@ -268,3 +273,11 @@ mouse_default_cursor_shape = 2
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "결혼하기"
+
+[node name="CharacterModal" parent="." instance=ExtResource("5_modal")]
+unique_name_in_owner = true
+visible = false
+
+[node name="ChildBirthModal" parent="." instance=ExtResource("6_cbm")]
+unique_name_in_owner = true
+visible = false

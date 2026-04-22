@@ -1,0 +1,152 @@
+[gd_scene load_steps=7 format=3 uid="uid://b0tamaa0a0009"]
+
+[ext_resource type="Script" path="res://scripts/ChildBirthModal.gd" id="1_cbm"]
+[ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="2_font"]
+[ext_resource type="PackedScene" path="res://scenes/Tamagotchi.tscn" id="3_tama"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_modal_panel"]
+content_margin_left = 24.0
+content_margin_top = 22.0
+content_margin_right = 24.0
+content_margin_bottom = 22.0
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.984, 0.82, 0.831, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+anti_aliasing_size = 1.5
+shadow_color = Color(0, 0, 0, 0.25)
+shadow_size = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_input"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.55, 0.62, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_pink_btn"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.984, 0.82, 0.831, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.55, 0.62, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[node name="ChildBirthModal" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_cbm")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.45)
+
+[node name="PanelCenter" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="ModalPanel" type="PanelContainer" parent="PanelCenter"]
+custom_minimum_size = Vector2(380, 380)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_modal_panel")
+
+[node name="VBox" type="VBoxContainer" parent="PanelCenter/ModalPanel"]
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="PanelCenter/ModalPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+text = "자녀가 태어났습니다."
+horizontal_alignment = 1
+
+[node name="StageCenter" type="CenterContainer" parent="PanelCenter/ModalPanel/VBox"]
+layout_mode = 2
+
+[node name="Stage" type="SubViewportContainer" parent="PanelCenter/ModalPanel/VBox/StageCenter"]
+custom_minimum_size = Vector2(115, 118)
+layout_mode = 2
+
+[node name="SubViewport" type="SubViewport" parent="PanelCenter/ModalPanel/VBox/StageCenter/Stage"]
+handle_input_locally = false
+size = Vector2i(115, 118)
+render_target_update_mode = 4
+transparent_bg = true
+
+[node name="ChildTama" parent="PanelCenter/ModalPanel/VBox/StageCenter/Stage/SubViewport" instance=ExtResource("3_tama")]
+unique_name_in_owner = true
+scale = Vector2(0.5, 0.5)
+
+[node name="InputRow" type="HBoxContainer" parent="PanelCenter/ModalPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ChildNameInput" type="LineEdit" parent="PanelCenter/ModalPanel/VBox/InputRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.25, 0.15, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBox_input")
+theme_override_styles/focus = SubResource("StyleBox_input")
+alignment = 1
+max_length = 12
+placeholder_text = "이름"
+
+[node name="ChildRecommendButton" type="Button" parent="PanelCenter/ModalPanel/VBox/InputRow"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "추천"
+
+[node name="ChildConfirmButton" type="Button" parent="PanelCenter/ModalPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBox_pink_btn")
+theme_override_styles/hover = SubResource("StyleBox_pink_btn")
+theme_override_styles/pressed = SubResource("StyleBox_pink_btn")
+theme_override_styles/focus = SubResource("StyleBox_pink_btn")
+text = "  확인  "
