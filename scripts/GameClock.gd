@@ -50,6 +50,12 @@ func format_time() -> String:
 		h12 = 12
 	return "%s %d:%02d" % [period, h12, m]
 
+func reset() -> void:
+	_total_game_minutes = float(DAY_START_MINUTES)
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	time_changed.emit()
+
 func _load() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		var text := FileAccess.get_file_as_string(SAVE_PATH)

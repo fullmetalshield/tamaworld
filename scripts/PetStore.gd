@@ -30,6 +30,7 @@ static func ensure_loaded() -> void:
 # Backfill missing fields on pets loaded from older save files.
 static func _migrate_pets() -> void:
 	var changed := false
+	var now_total := int(GameClock._total_game_minutes)
 	for pet in _pets:
 		if not pet.has("stats"):
 			pet["stats"] = Stats.random_base_stats()
@@ -40,12 +41,22 @@ static func _migrate_pets() -> void:
 		if not pet.has("died_at_minutes"):
 			pet["died_at_minutes"] = null
 			changed = true
+		# Pets generated before the lifespan was bumped keep their too-short
+		# rolls and may have already been marked dead. Re-roll to the current
+		# range and revive if the new lifespan puts them back in range.
+		if int(pet.get("lifespan_minutes", 0)) < Stats.LIFESPAN_MINUTES_MIN:
+			pet["lifespan_minutes"] = Stats.random_lifespan_minutes()
+			changed = true
+			if pet.get("died_at_minutes") != null:
+				var age := Stats.age_minutes(pet, now_total)
+				if age < int(pet["lifespan_minutes"]):
+					pet["died_at_minutes"] = null
 	if changed:
 		persist()
 
 static func create_protagonist(name: String) -> Dictionary:
 	var pet := generate_random_pet({"given_name": name})
-	pet["born_at_minutes"] = 0
+	pet["born_at_minutes"] = int(GameClock._total_game_minutes)
 	add_pet(pet)
 	return pet
 

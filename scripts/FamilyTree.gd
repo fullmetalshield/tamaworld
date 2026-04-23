@@ -260,6 +260,7 @@ func _on_child_born(_child: Dictionary) -> void:
 func _on_reset_pressed() -> void:
 	PetStore.reset()
 	EventManager.reset()
+	GameClock.reset()
 	event_banner.visible = false
 	_zoom = 1.0
 	zoom_slider.set_value_no_signal(1.0)

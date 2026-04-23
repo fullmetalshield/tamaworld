@@ -21,8 +21,8 @@ const STAT_MAX := 10
 const DAY_MINUTES := 24 * 60
 
 # Development-tier lifespan: 1~3 game days. Tune this single source later.
-const LIFESPAN_MINUTES_MIN := 1 * DAY_MINUTES
-const LIFESPAN_MINUTES_MAX := 3 * DAY_MINUTES
+const LIFESPAN_MINUTES_MIN := 6 * DAY_MINUTES
+const LIFESPAN_MINUTES_MAX := 8 * DAY_MINUTES
 
 # --- factories ----------------------------------------------------------
 
