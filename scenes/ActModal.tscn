@@ -1,9 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://b0tamaa0a0008"]
+[gd_scene format=3 uid="uid://b0tamaa0a000b"]
 
-[ext_resource type="Script" path="res://scripts/CharacterModal.gd" id="1_modal"]
+[ext_resource type="Script" path="res://scripts/ActModal.gd" id="1_act"]
 [ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="2_font"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBox_modal_panel"]
+[sub_resource type="StyleBoxFlat" id="StyleBox_act_panel"]
 content_margin_left = 24.0
 content_margin_top = 24.0
 content_margin_right = 24.0
@@ -22,12 +22,12 @@ anti_aliasing_size = 1.5
 shadow_color = Color(0, 0, 0, 0.25)
 shadow_size = 12
 
-[node name="CharacterModal" type="Control"]
+[node name="ActModal" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource("1_modal")
+script = ExtResource("1_act")
 
 [node name="Backdrop" type="ColorRect" parent="."]
 layout_mode = 1
@@ -44,9 +44,9 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="ModalPanel" type="PanelContainer" parent="PanelCenter"]
-custom_minimum_size = Vector2(420, 360)
+custom_minimum_size = Vector2(420, 240)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBox_modal_panel")
+theme_override_styles/panel = SubResource("StyleBox_act_panel")
 
 [node name="VBox" type="VBoxContainer" parent="PanelCenter/ModalPanel"]
 theme_override_constants/separation = 14
@@ -60,24 +60,23 @@ theme_override_font_sizes/font_size = 28
 text = "이름"
 horizontal_alignment = 1
 
-[node name="AgeLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
+[node name="HSeparator" type="HSeparator" parent="PanelCenter/ModalPanel/VBox"]
+layout_mode = 2
+
+[node name="ActionsList" type="VBoxContainer" parent="PanelCenter/ModalPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="EmptyLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.45, 0.55, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 18
-text = "1일차 / 1일 (유년기)"
+theme_override_font_sizes/font_size = 16
+text = "할 수 있는 행동이 없습니다."
 horizontal_alignment = 1
-
-[node name="HSeparator" type="HSeparator" parent="PanelCenter/ModalPanel/VBox"]
-layout_mode = 2
-
-[node name="StatsGrid" type="GridContainer" parent="PanelCenter/ModalPanel/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/h_separation = 12
-theme_override_constants/v_separation = 8
-columns = 3
+visible = false
 
 [node name="Spacer" type="Control" parent="PanelCenter/ModalPanel/VBox"]
 layout_mode = 2

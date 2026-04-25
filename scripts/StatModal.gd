@@ -1,12 +1,19 @@
 extends Control
 
+# Stats-only view of a pet: name, age/lifespan/phase, six stat bars. Holds no
+# action UI — that lives in ActModal. Opened via the radial menu's "STAT"
+# item.
+
 signal confirmed
 
 const FONT := preload("res://assets/fonts/neodgm.ttf")
 const STAT_LABEL_COLOR := Color(0.38, 0.2, 0.26, 1)
 const STAT_VALUE_COLOR := Color(0.28, 0.28, 0.34, 1)
+const MALE_COLOR := Color(0.30, 0.55, 0.85, 1)
+const FEMALE_COLOR := Color(0.92, 0.40, 0.55, 1)
 
 @onready var character_name_label: Label = %CharacterName
+@onready var gender_mark: Label = %GenderMark
 @onready var age_label: Label = %AgeLabel
 @onready var stats_grid: GridContainer = %StatsGrid
 @onready var confirm_button: Button = %ConfirmButton
@@ -55,7 +62,12 @@ func _build_stats_grid() -> void:
 		_stat_values[k] = value_label
 
 func show_for(pet: Dictionary) -> void:
+	_render(pet)
+	visible = true
+
+func _render(pet: Dictionary) -> void:
 	character_name_label.text = pet.get("given_name", "")
+	_apply_gender_mark(String(pet.get("gender", "")))
 	var now: int = int(GameClock._total_game_minutes)
 	var age_min := Stats.age_minutes(pet, now)
 	var lifespan_min: int = int(pet.get("lifespan_minutes", Stats.DAY_MINUTES))
@@ -77,7 +89,19 @@ func show_for(pet: Dictionary) -> void:
 			_stat_bars[k].value = v
 		if _stat_values.has(k):
 			_stat_values[k].text = "%d/%d" % [v, Stats.STAT_MAX]
-	visible = true
+
+func _apply_gender_mark(gender: String) -> void:
+	match gender:
+		"male":
+			gender_mark.text = "♂"
+			gender_mark.add_theme_color_override("font_color", MALE_COLOR)
+			gender_mark.visible = true
+		"female":
+			gender_mark.text = "♀"
+			gender_mark.add_theme_color_override("font_color", FEMALE_COLOR)
+			gender_mark.visible = true
+		_:
+			gender_mark.visible = false
 
 func _on_confirm_pressed() -> void:
 	visible = false

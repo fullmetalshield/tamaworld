@@ -50,6 +50,13 @@ func format_time() -> String:
 		h12 = 12
 	return "%s %d:%02d" % [period, h12, m]
 
+func advance_minutes(minutes: int) -> void:
+	if minutes <= 0:
+		return
+	_total_game_minutes += float(minutes)
+	time_changed.emit()
+	_save()
+
 func reset() -> void:
 	_total_game_minutes = float(DAY_START_MINUTES)
 	if FileAccess.file_exists(SAVE_PATH):

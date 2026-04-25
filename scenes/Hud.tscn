@@ -76,7 +76,20 @@ theme_override_font_sizes/font_size = 20
 text = "1일차"
 vertical_alignment = 1
 
-[node name="Spacer" type="Control" parent="HudPanel/HBox"]
+[node name="SpacerLeft" type="Control" parent="HudPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MoneyLabel" type="Label" parent="HudPanel/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.55, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "0원"
+vertical_alignment = 1
+
+[node name="SpacerRight" type="Control" parent="HudPanel/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 

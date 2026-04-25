@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+I18n="*res://scripts/I18n.gd"
 GameClock="*res://scripts/GameClock.gd"
 EventManager="*res://scripts/EventManager.gd"
 
@@ -24,12 +25,10 @@ EventManager="*res://scripts/EventManager.gd"
 
 window/size/viewport_width=640
 window/size/viewport_height=480
-window/size/resizable=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
 [rendering]
 
-renderer/rendering_method="forward_plus"
 textures/canvas_textures/default_texture_filter=0
 environment/defaults/default_clear_color=Color(1, 1, 1, 1)

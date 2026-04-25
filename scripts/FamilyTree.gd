@@ -1,5 +1,12 @@
 extends Control
 
+const FONT := preload("res://assets/fonts/neodgm.ttf")
+const SLOT_INDICATOR_DONUT_SIZE := 18.0
+const SLOT_INDICATOR_DONUT_THICKNESS := 6.0
+const SLOT_INDICATOR_TEXT_COLOR := Color(0.38, 0.2, 0.26, 1)
+
+var _slot_indicators: Dictionary = {}
+
 @onready var tama1: Tamagotchi = %Tama1
 @onready var tama2: Tamagotchi = %Tama2
 @onready var tama3: Tamagotchi = %Tama3
@@ -13,8 +20,23 @@ extends Control
 @onready var stage_viewport: Panel = %StageViewport
 @onready var stage_canvas: Control = %StageCanvas
 @onready var zoom_slider: VSlider = %ZoomSlider
-@onready var character_modal: Control = %CharacterModal
+@onready var stat_modal: Control = %StatModal
+@onready var act_modal: Control = %ActModal
 @onready var child_birth_modal: Control = %ChildBirthModal
+
+var _radial_menu: RadialMenu
+var _radial_pet_id: String = ""
+var _elevated_slot: Control = null
+var _elevated_slot_z: int = 0
+var _elevated_name: Label = null
+var _elevated_indicator: Control = null
+const _ELEVATED_Z := 100
+const _NAME_FADE_DURATION := 0.12
+# Radial menu sits slightly below the slot's geometric centre so it ends up
+# visually centred on the character's body (which renders mostly in the
+# upper-middle of the slot). Screen-space offset, so it stays consistent
+# regardless of zoom.
+const _RADIAL_CENTER_OFFSET := Vector2(0, 10)
 
 const _CLICK_DRAG_THRESHOLD := 6.0
 # Visual nudge for the initial centering — protagonist sits 50px above the
@@ -56,6 +78,8 @@ func _ready() -> void:
 	slot2.visible = false
 	slot3.visible = false
 	child_birth_modal.visible = false
+	_build_slot_indicators()
+	_build_radial_menu()
 	_refresh()
 	await get_tree().process_frame
 	_center_on_protagonist()
@@ -98,6 +122,165 @@ func _refresh() -> void:
 		slot3.visible = true
 		_apply_pet(kids[0], tama3, floating_name3)
 
+func _process(_delta: float) -> void:
+	_refresh_slot_indicators()
+
+# --- radial menu --------------------------------------------------------
+
+func _build_radial_menu() -> void:
+	if _radial_menu != null:
+		return
+	_radial_menu = RadialMenu.new()
+	add_child(_radial_menu)
+	_radial_menu.item_selected.connect(_on_radial_item_selected)
+	_radial_menu.closed.connect(_restore_slot)
+
+func _elevate_slot(slot_index: int) -> void:
+	# Lift the clicked character above the radial menu's backdrop so it
+	# remains bright and visibly "the target", while everything else dims.
+	# Fade out the floating name and the slot's action indicator so only
+	# the character image is on display while the menu is up.
+	_restore_slot()
+	var slot := _get_slot(slot_index)
+	if slot == null:
+		return
+	_elevated_slot = slot
+	_elevated_slot_z = slot.z_index
+	slot.z_index = _ELEVATED_Z
+
+	var name_label := _name_for_slot(slot_index)
+	if name_label != null:
+		_elevated_name = name_label
+		var tw_n := create_tween()
+		tw_n.tween_property(name_label, "modulate:a", 0.0, _NAME_FADE_DURATION)
+
+	var indicator: Dictionary = _slot_indicators.get(slot_index, {})
+	if not indicator.is_empty():
+		var container: Control = indicator.container
+		_elevated_indicator = container
+		var tw_i := create_tween()
+		tw_i.tween_property(container, "modulate:a", 0.0, _NAME_FADE_DURATION)
+
+func _restore_slot() -> void:
+	if _elevated_slot != null and is_instance_valid(_elevated_slot):
+		_elevated_slot.z_index = _elevated_slot_z
+	_elevated_slot = null
+	if _elevated_name != null and is_instance_valid(_elevated_name):
+		var tw_n := create_tween()
+		tw_n.tween_property(_elevated_name, "modulate:a", 1.0, _NAME_FADE_DURATION)
+	_elevated_name = null
+	if _elevated_indicator != null and is_instance_valid(_elevated_indicator):
+		var tw_i := create_tween()
+		tw_i.tween_property(_elevated_indicator, "modulate:a", 1.0, _NAME_FADE_DURATION)
+	_elevated_indicator = null
+
+func _name_for_slot(slot_index: int) -> Label:
+	match slot_index:
+		1: return floating_name1
+		2: return floating_name2
+		3: return floating_name3
+	return null
+
+func _open_radial_for_pet(pet: Dictionary, slot_index: int) -> void:
+	var slot := _get_slot(slot_index)
+	if slot == null:
+		return
+	_radial_pet_id = pet.get("id", "")
+	var proto := PetStore.protagonist()
+	var is_protagonist: bool = not proto.is_empty() and pet.get("id", "") == proto.get("id", "")
+	var now: int = int(GameClock._total_game_minutes)
+	var alive := Stats.is_alive(pet, now)
+	var items: Array = [{"id": "stat", "label": tr("RADIAL_STAT")}]
+	if is_protagonist and alive:
+		items.append({"id": "act", "label": tr("RADIAL_ACT")})
+	_elevate_slot(slot_index)
+	# Use the full transform chain so zoom/pan are honoured — `get_global_rect`
+	# alone returns the unscaled local size, which would mis-centre the menu
+	# whenever the StageCanvas isn't at zoom 1.0.
+	var center: Vector2 = slot.get_global_transform_with_canvas() * (slot.size * 0.5) + _RADIAL_CENTER_OFFSET
+	_radial_menu.open_at(center, items)
+
+func _on_radial_item_selected(id: String) -> void:
+	# Restore z_index immediately so the modal that follows can dim the
+	# character along with everything else (otherwise the elevated slot
+	# would float above the modal backdrop too).
+	_restore_slot()
+	var pet := PetStore.find_by_id(_radial_pet_id)
+	if pet.is_empty():
+		return
+	match id:
+		"stat":
+			stat_modal.show_for(pet)
+		"act":
+			act_modal.show_for(pet)
+
+# --- per-slot action indicator -----------------------------------------
+
+func _build_slot_indicators() -> void:
+	var slot1 := stage_canvas.get_node("Slot1") as Control
+	_slot_indicators[1] = _make_slot_indicator(slot1)
+	_slot_indicators[2] = _make_slot_indicator(slot2)
+	_slot_indicators[3] = _make_slot_indicator(slot3)
+
+func _make_slot_indicator(slot: Control) -> Dictionary:
+	var container := HBoxContainer.new()
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.alignment = BoxContainer.ALIGNMENT_CENTER
+	container.add_theme_constant_override("separation", 4)
+	# Bottom-center of the slot, hanging just below the character.
+	container.anchor_left = 0.0
+	container.anchor_right = 1.0
+	container.anchor_top = 1.0
+	container.anchor_bottom = 1.0
+	container.offset_left = 0.0
+	container.offset_right = 0.0
+	container.offset_top = -4.0
+	container.offset_bottom = 22.0
+	container.visible = false
+
+	var donut := DonutProgress.new()
+	donut.custom_minimum_size = Vector2(SLOT_INDICATOR_DONUT_SIZE, SLOT_INDICATOR_DONUT_SIZE)
+	donut.thickness = SLOT_INDICATOR_DONUT_THICKNESS
+	donut.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(donut)
+
+	var label := Label.new()
+	label.add_theme_font_override("font", FONT)
+	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_color_override("font_color", SLOT_INDICATOR_TEXT_COLOR)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	container.add_child(label)
+
+	slot.add_child(container)
+	return {"donut": donut, "label": label, "container": container}
+
+func _refresh_slot_indicators() -> void:
+	var proto := PetStore.protagonist()
+	if proto.is_empty():
+		for idx in _slot_indicators:
+			_slot_indicators[idx].container.visible = false
+		return
+	_apply_slot_indicator(1, proto)
+	_apply_slot_indicator(2, PetStore.spouse_of(proto))
+	var kids := PetStore.children_of(proto)
+	_apply_slot_indicator(3, kids[0] if not kids.is_empty() else {})
+
+func _apply_slot_indicator(slot_index: int, pet: Dictionary) -> void:
+	var ind: Dictionary = _slot_indicators.get(slot_index, {})
+	if ind.is_empty():
+		return
+	if pet.is_empty() or not Actions.is_busy(pet):
+		ind.container.visible = false
+		return
+	var action_id := Actions.active_id(pet)
+	if not Actions.CATALOG.has(action_id):
+		ind.container.visible = false
+		return
+	var action: Dictionary = Actions.CATALOG[action_id]
+	ind.container.visible = true
+	ind.donut.progress = Actions.progress(pet)
+	ind.label.text = tr(action.get("progress_label_key", action.label_key))
+
 func _apply_pet(pet: Dictionary, t: Tamagotchi, n: Label) -> void:
 	var col := Color.html(pet.get("color", "#ffffff"))
 	t.set_all(pet.get("body_id", ""), pet.get("eyes_id", ""), col)
@@ -134,8 +317,9 @@ func _on_slot_input(event: InputEvent, slot_index: int) -> void:
 			if event.global_position.distance_to(_slot_press_origin) > _CLICK_DRAG_THRESHOLD:
 				return
 			var pet := _pet_for_slot(slot_index)
-			if not pet.is_empty():
-				character_modal.show_for(pet)
+			if pet.is_empty():
+				return
+			_open_radial_for_pet(pet, slot_index)
 
 func _get_slot(slot_index: int) -> Control:
 	match slot_index:
@@ -261,6 +445,7 @@ func _on_reset_pressed() -> void:
 	PetStore.reset()
 	EventManager.reset()
 	GameClock.reset()
+	Family.reset()
 	event_banner.visible = false
 	_zoom = 1.0
 	zoom_slider.set_value_no_signal(1.0)

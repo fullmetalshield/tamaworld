@@ -1,0 +1,17 @@
+{
+  "ACTION_PLAY": {"ko": "놀기", "en": "Play"},
+  "ACTION_STUDY": {"ko": "공부하기", "en": "Study"},
+  "ACTION_REST": {"ko": "쉬기", "en": "Rest"},
+  "ACTION_PLAY_PROGRESS": {"ko": "노는 중", "en": "Playing"},
+  "ACTION_STUDY_PROGRESS": {"ko": "공부하는 중", "en": "Studying"},
+  "ACTION_REST_PROGRESS": {"ko": "쉬는 중", "en": "Resting"},
+  "ACTION_SCHOOL_PUBLIC": {"ko": "공립 초등학교", "en": "Public Elementary"},
+  "ACTION_SCHOOL_PRIVATE": {"ko": "사립 초등학교", "en": "Private Elementary"},
+  "ACTION_SCHOOL_ELITE": {"ko": "엘리트 초등학교", "en": "Elite Elementary"},
+  "ACTION_SCHOOL_ENROLL_PROGRESS": {"ko": "입학 중", "en": "Enrolling"},
+  "ACTION_DURATION_SUFFIX": {"ko": "(%d분)", "en": "(%d min)"},
+  "MODAL_ACTIONS_HEADING": {"ko": "행동", "en": "Actions"},
+  "HUD_MONEY": {"ko": "%d원", "en": "$%d"},
+  "RADIAL_STAT": {"ko": "상태", "en": "STAT"},
+  "RADIAL_ACT": {"ko": "행동", "en": "ACT"}
+}

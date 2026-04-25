@@ -21,14 +21,68 @@ func _ready() -> void:
 	GameClock.time_changed.connect(_tick)
 
 func _tick() -> void:
-	var now := int(GameClock._total_game_minutes) - GameClock.DAY_START_MINUTES
 	var proto := PetStore.protagonist()
 	if proto.is_empty():
 		return
 
 	_check_deaths()
-	_maybe_fire_partner_event(proto, now)
-	_maybe_fire_child_event(proto, now + GameClock.DAY_START_MINUTES)
+	_tick_actions()
+	_tick_economy()
+	# Marriage and child events no longer fire automatically. They must be
+	# triggered explicitly (e.g. via a future "결혼하기" / "자녀 갖기" action),
+	# which can call `_maybe_fire_partner_event` / `_maybe_fire_child_event`
+	# directly or set `_partner_candidate` / `_pending_child` themselves.
+
+func _tick_actions() -> void:
+	var proto := PetStore.protagonist()
+	var proto_id: String = proto.get("id", "") if not proto.is_empty() else ""
+	var now_total := int(GameClock._total_game_minutes)
+	for pet in PetStore.all():
+		Actions.tick(pet)
+		if pet.get("id", "") == proto_id:
+			continue
+		if not Stats.is_alive(pet, now_total):
+			continue
+		if Actions.is_busy(pet):
+			continue
+		_auto_pick_action(pet, now_total)
+
+func _auto_pick_action(pet: Dictionary, now_minutes: int) -> void:
+	var ids: Array = Actions.available_ids(pet, now_minutes)
+	# Decisions like school enrolment are deliberate player choices, not
+	# something the auto-loop should make for non-protagonist pets.
+	ids = ids.filter(func(id): return not Actions.CATALOG[id].has("sets_school"))
+	if ids.is_empty():
+		return
+	var pick: String = ids[randi() % ids.size()]
+	Actions.start(pet, pick)
+
+# Per-tick economy: jobs add income, enrolled schools drain cost, graduation
+# clears the school field once the pet leaves 아동기. Net delta is applied to
+# Family in a single call so we don't write the family file three times per
+# tick.
+func _tick_economy() -> void:
+	var now_total := int(GameClock._total_game_minutes)
+	var net_delta: int = 0
+	var pets_changed: bool = false
+	for pet in PetStore.all():
+		if not Stats.is_alive(pet, now_total):
+			continue
+		var job_id: Variant = pet.get("job")
+		if job_id != null:
+			net_delta += Jobs.income_per_second(String(job_id))
+		var school_id: Variant = pet.get("school")
+		if school_id != null:
+			var phase_id: String = String(Stats.current_phase(pet, now_total).get("id", ""))
+			if phase_id != "child":
+				pet["school"] = null
+				pets_changed = true
+			else:
+				net_delta -= Schools.cost_per_second(String(school_id))
+	if net_delta != 0:
+		Family.add_money(net_delta)
+	if pets_changed:
+		PetStore.persist()
 
 func _check_deaths() -> void:
 	var now_total := int(GameClock._total_game_minutes)

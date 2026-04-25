@@ -41,6 +41,29 @@ static func _migrate_pets() -> void:
 		if not pet.has("died_at_minutes"):
 			pet["died_at_minutes"] = null
 			changed = true
+		if not pet.has("action_counts"):
+			pet["action_counts"] = {}
+			changed = true
+		if not pet.has("active_action"):
+			pet["active_action"] = null
+			changed = true
+		if not pet.has("gender"):
+			pet["gender"] = random_gender()
+			changed = true
+		if not pet.has("school"):
+			pet["school"] = null
+			changed = true
+		if not pet.has("job"):
+			pet["job"] = null
+			changed = true
+		# Money is now family-wide (Family.gd). Sweep any leftover per-pet
+		# `money` field from older saves into the family pot, then drop it.
+		if pet.has("money"):
+			var carried: int = int(pet["money"])
+			if carried != 0:
+				Family.add_money(carried)
+			pet.erase("money")
+			changed = true
 		# Pets generated before the lifespan was bumped keep their too-short
 		# rolls and may have already been marked dead. Re-roll to the current
 		# range and revive if the new lifespan puts them back in range.
@@ -56,7 +79,13 @@ static func _migrate_pets() -> void:
 
 static func create_protagonist(name: String) -> Dictionary:
 	var pet := generate_random_pet({"given_name": name})
-	pet["born_at_minutes"] = int(GameClock._total_game_minutes)
+	# Protagonist starts in early 청년기 with the basic starting job. Age is
+	# set to ~37% of lifespan, just inside the 청년기 band (0.36~0.52), so
+	# most of young adulthood + middle/mature/elder still lies ahead.
+	var lifespan: int = int(pet.get("lifespan_minutes", Stats.DAY_MINUTES))
+	var start_age: int = int(0.37 * float(lifespan))
+	pet["born_at_minutes"] = int(GameClock._total_game_minutes) - start_age
+	pet["job"] = Jobs.STARTING_JOB
 	add_pet(pet)
 	return pet
 
@@ -135,6 +164,11 @@ static func generate_random_pet(overrides: Dictionary = {}) -> Dictionary:
 		"stats": Stats.random_base_stats(),
 		"lifespan_minutes": Stats.random_lifespan_minutes(),
 		"died_at_minutes": null,
+		"action_counts": {},
+		"active_action": null,
+		"gender": random_gender(),
+		"school": null,
+		"job": null,
 	}
 	for k in overrides:
 		pet[k] = overrides[k]
@@ -145,3 +179,6 @@ static func make_uid() -> String:
 	for i in 12:
 		s += "%x" % (randi() % 16)
 	return s
+
+static func random_gender() -> String:
+	return "male" if randi() % 2 == 0 else "female"

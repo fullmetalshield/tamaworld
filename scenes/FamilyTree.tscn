@@ -4,7 +4,8 @@
 [ext_resource type="PackedScene" path="res://scenes/Tamagotchi.tscn" id="2_tama"]
 [ext_resource type="PackedScene" path="res://scenes/Hud.tscn" id="3_hud"]
 [ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="4_font"]
-[ext_resource type="PackedScene" path="res://scenes/CharacterModal.tscn" id="5_modal"]
+[ext_resource type="PackedScene" path="res://scenes/StatModal.tscn" id="5_stat"]
+[ext_resource type="PackedScene" path="res://scenes/ActModal.tscn" id="5_act"]
 [ext_resource type="PackedScene" path="res://scenes/ChildBirthModal.tscn" id="6_cbm"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_banner"]
@@ -106,9 +107,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -80.0
-offset_top = -15.0
+offset_top = -25.0
 offset_right = 80.0
-offset_bottom = 15.0
+offset_bottom = 5.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
 theme_override_fonts/font = ExtResource("4_font")
@@ -152,9 +153,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -80.0
-offset_top = -15.0
+offset_top = -25.0
 offset_right = 80.0
-offset_bottom = 15.0
+offset_bottom = 5.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
 theme_override_fonts/font = ExtResource("4_font")
@@ -198,9 +199,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -80.0
-offset_top = -15.0
+offset_top = -25.0
 offset_right = 80.0
-offset_bottom = 15.0
+offset_bottom = 5.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
 theme_override_fonts/font = ExtResource("4_font")
@@ -274,7 +275,11 @@ theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "결혼하기"
 
-[node name="CharacterModal" parent="." instance=ExtResource("5_modal")]
+[node name="StatModal" parent="." instance=ExtResource("5_stat")]
+unique_name_in_owner = true
+visible = false
+
+[node name="ActModal" parent="." instance=ExtResource("5_act")]
 unique_name_in_owner = true
 visible = false
 
