@@ -1,0 +1,13 @@
+{
+  "starting_job": "clerk",
+  "catalog": {
+    "clerk":    {"label": "타마상사 신입사원", "category": "office",    "income_per_second": 3},
+    "teacher":  {"label": "타마초등 보조교사", "category": "service",   "income_per_second": 5},
+    "doctor":   {"label": "타마종합병원 인턴", "category": "service",   "income_per_second": 10},
+    "merchant": {"label": "타마시장 잡화상인", "category": "commerce",  "income_per_second": 4},
+    "athlete":  {"label": "타마구단 신인선수", "category": "sports",    "income_per_second": 6},
+    "artist":   {"label": "인디 가수",        "category": "creative",  "income_per_second": 4},
+    "engineer": {"label": "타마전자 연구원",   "category": "technical", "income_per_second": 7},
+    "farmer":   {"label": "타마농장 일꾼",     "category": "primary",   "income_per_second": 3}
+  }
+}

@@ -51,7 +51,14 @@ func _auto_pick_action(pet: Dictionary, now_minutes: int) -> void:
 	var ids: Array = Actions.available_ids(pet, now_minutes)
 	# Decisions like school enrolment are deliberate player choices, not
 	# something the auto-loop should make for non-protagonist pets.
-	ids = ids.filter(func(id): return not Actions.CATALOG[id].has("sets_school"))
+	ids = ids.filter(func(id):
+		var entry: Dictionary = Actions.CATALOG[id]
+		if entry.has("sets_school") or entry.has("opens_picker"):
+			return false
+		if Actions.is_on_cooldown(pet, id):
+			return false
+		return true
+	)
 	if ids.is_empty():
 		return
 	var pick: String = ids[randi() % ids.size()]

@@ -1,83 +1,32 @@
 class_name Actions
 extends RefCounted
 
-# Player-driven action catalog. Each entry on `CATALOG`:
-#   label_key:    translation key for the button text
-#   duration:     game-minutes the action takes to complete (waits in real time
-#                 since 1 real second = 1 game minute by default)
-#   effects:      Dictionary of base-stat deltas applied on completion
-#   money_reward: coins added to pet["money"] on completion
+# Player-driven action catalog. The data lives in `data/actions.json` and is
+# loaded into `CATALOG` at boot by `scripts/CatalogLoader.gd`. Each entry:
+#   label_key / progress_label_key: translation keys for the button text
+#   duration:        game-minutes the action takes to complete (waits in real
+#                    time since 1 real second = 1 game minute by default)
+#   effects:         Dictionary of base-stat deltas applied on completion
+#   money_reward:    coins added to Family treasury on completion
+#   color:           hex string in JSON, parsed to Color by the loader
+#   phases:          which life phases gate this action
+#   sets_school:     (optional) school id to assign on completion
+#   opens_picker:    (optional) marks the action as a UI trigger that opens
+#                    a chooser instead of running as a timed wait
+#   requires_club:   (optional) only show if pet has at least one club
+#   cooldown_minutes (optional) game-minutes after use before reappearing
 #
-# Actions are NOT instantaneous: `start()` records an `active_action` block on
-# the pet (id, started_at_minutes, duration_minutes), and `tick()` finishes
-# the action once enough game-minutes have elapsed. While an action is
-# running, pet["active_action"] is the source of truth; UI reads `progress()`
-# to render the donut, and `tick()` flushes rewards exactly once.
+# Actions are NOT instantaneous: `start()` records an `active_action` block
+# on the pet (id, started_at_minutes, duration_minutes), and `tick()`
+# finishes the action once enough game-minutes have elapsed.
 
-const CATALOG := {
-	"play": {
-		"label_key": "ACTION_PLAY",
-		"progress_label_key": "ACTION_PLAY_PROGRESS",
-		"duration": 120,
-		"effects": {"charisma": 1, "luck": 1},
-		"money_reward": 5,
-		"color": Color(1.00, 0.78, 0.84, 1),
-		"phases": ["toddler", "child", "teen", "young_adult", "middle_aged", "mature"],
-	},
-	"study": {
-		"label_key": "ACTION_STUDY",
-		"progress_label_key": "ACTION_STUDY_PROGRESS",
-		"duration": 180,
-		"effects": {"intelligence": 1},
-		"money_reward": 10,
-		"color": Color(0.78, 0.85, 1.00, 1),
-		"phases": ["child", "teen", "young_adult", "middle_aged"],
-	},
-	"rest": {
-		"label_key": "ACTION_REST",
-		"progress_label_key": "ACTION_REST_PROGRESS",
-		"duration": 60,
-		"effects": {"stamina": 1},
-		"money_reward": 0,
-		"color": Color(0.72, 0.93, 0.83, 1),
-		"phases": ["infant", "toddler", "child", "teen", "young_adult", "middle_aged", "mature", "elder"],
-	},
-	"school_public": {
-		"label_key": "ACTION_SCHOOL_PUBLIC",
-		"progress_label_key": "ACTION_SCHOOL_ENROLL_PROGRESS",
-		"duration": 1,
-		"effects": {},
-		"money_reward": 0,
-		"color": Color(0.82, 0.93, 0.78, 1),
-		"phases": ["child"],
-		"sets_school": "public",
-	},
-	"school_private": {
-		"label_key": "ACTION_SCHOOL_PRIVATE",
-		"progress_label_key": "ACTION_SCHOOL_ENROLL_PROGRESS",
-		"duration": 1,
-		"effects": {},
-		"money_reward": 0,
-		"color": Color(0.82, 0.88, 1.00, 1),
-		"phases": ["child"],
-		"sets_school": "private",
-	},
-	"school_elite": {
-		"label_key": "ACTION_SCHOOL_ELITE",
-		"progress_label_key": "ACTION_SCHOOL_ENROLL_PROGRESS",
-		"duration": 1,
-		"effects": {},
-		"money_reward": 0,
-		"color": Color(0.97, 0.88, 0.65, 1),
-		"phases": ["child"],
-		"sets_school": "elite",
-	},
-}
+static var CATALOG: Dictionary = {}
 
 static func available_ids(pet: Dictionary, now_minutes: int) -> Array:
 	var phase: Dictionary = Stats.current_phase(pet, now_minutes)
 	var phase_id: String = String(phase.get("id", ""))
 	var has_school: bool = pet.get("school") != null
+	var has_any_club: bool = not (pet.get("clubs", []) as Array).is_empty()
 	var ids: Array = []
 	for id in CATALOG:
 		var entry: Dictionary = CATALOG[id]
@@ -87,6 +36,9 @@ static func available_ids(pet: Dictionary, now_minutes: int) -> Array:
 		# Once a pet has enrolled, the other school options disappear so the
 		# action list doesn't keep offering a choice that's already made.
 		if entry.has("sets_school") and has_school:
+			continue
+		# Club activities only show up after the pet has joined at least one.
+		if entry.get("requires_club", false) and not has_any_club:
 			continue
 		ids.append(id)
 	return ids
@@ -134,6 +86,25 @@ static func start(pet: Dictionary, action_id: String) -> bool:
 	PetStore.persist()
 	return true
 
+# Club-specific variant of `start`. The `club_id` is stored on the active
+# action so `_complete` knows which club's bond pool to draw from when the
+# wait finishes. The underlying action id stays "club_activity" so all the
+# generic timing/effects/money logic still applies.
+static func start_club_activity(pet: Dictionary, club_id: String) -> bool:
+	if is_busy(pet):
+		return false
+	if not CATALOG.has("club_activity"):
+		return false
+	var action: Dictionary = CATALOG["club_activity"]
+	pet["active_action"] = {
+		"id": "club_activity",
+		"club_id": club_id,
+		"started_at_minutes": float(GameClock._total_game_minutes),
+		"duration_minutes": int(action.get("duration", 90)),
+	}
+	PetStore.persist()
+	return true
+
 # Returns the rewards dict if the action just completed; empty dict otherwise.
 static func tick(pet: Dictionary) -> Dictionary:
 	if not is_busy(pet):
@@ -141,6 +112,40 @@ static func tick(pet: Dictionary) -> Dictionary:
 	if progress(pet) < 1.0:
 		return {}
 	return _complete(pet)
+
+static func is_on_cooldown(pet: Dictionary, action_id: String) -> bool:
+	return cooldown_remaining_minutes(pet, action_id) > 0
+
+static func cooldown_remaining_minutes(pet: Dictionary, action_id: String) -> int:
+	var cooldowns: Dictionary = pet.get("action_cooldowns", {})
+	var until: int = int(cooldowns.get(action_id, 0))
+	return max(0, until - int(GameClock._total_game_minutes))
+
+# Stamps the action's cooldown_until timestamp on the pet so the same action
+# can't be re-triggered until enough game-minutes have elapsed. No-op for
+# actions without `cooldown_minutes` defined.
+static func set_cooldown(pet: Dictionary, action_id: String) -> void:
+	var entry: Dictionary = CATALOG.get(action_id, {})
+	var cd_min: int = int(entry.get("cooldown_minutes", 0))
+	if cd_min <= 0:
+		return
+	var cooldowns: Dictionary = pet.get("action_cooldowns", {})
+	cooldowns[action_id] = int(GameClock._total_game_minutes) + cd_min
+	pet["action_cooldowns"] = cooldowns
+	PetStore.persist()
+
+static func _form_club_bond(pet: Dictionary, club_id: String) -> void:
+	var clubs: Array = pet.get("clubs", [])
+	# Fall back to a random joined club if the caller didn't specify one
+	# (e.g. a save from before per-club tracking was added).
+	if not (club_id in clubs):
+		if clubs.is_empty():
+			return
+		club_id = String(clubs[randi() % clubs.size()])
+	var name: String = Clubs.random_member_name()
+	var bonds: Dictionary = pet.get("bonds", {})
+	bonds[name] = int(bonds.get(name, 0)) + 1
+	pet["bonds"] = bonds
 
 static func _complete(pet: Dictionary) -> Dictionary:
 	var a: Dictionary = pet.get("active_action", {})
@@ -161,6 +166,8 @@ static func _complete(pet: Dictionary) -> Dictionary:
 		Family.add_money(money_reward)
 	if action.has("sets_school"):
 		pet["school"] = String(action["sets_school"])
+	if action_id == "club_activity":
+		_form_club_bond(pet, String(a.get("club_id", "")))
 	var counts: Dictionary = pet.get("action_counts", {})
 	counts[action_id] = int(counts.get(action_id, 0)) + 1
 	pet["action_counts"] = counts

@@ -1,0 +1,7 @@
+{
+  "catalog": {
+    "public":  {"label": "공립 초등학교",   "cost_per_second": 0},
+    "private": {"label": "사립 초등학교",   "cost_per_second": 1},
+    "elite":   {"label": "엘리트 초등학교", "cost_per_second": 3}
+  }
+}

@@ -56,6 +56,15 @@ static func _migrate_pets() -> void:
 		if not pet.has("job"):
 			pet["job"] = null
 			changed = true
+		if not pet.has("clubs"):
+			pet["clubs"] = []
+			changed = true
+		if not pet.has("bonds"):
+			pet["bonds"] = {}
+			changed = true
+		if not pet.has("action_cooldowns"):
+			pet["action_cooldowns"] = {}
+			changed = true
 		# Money is now family-wide (Family.gd). Sweep any leftover per-pet
 		# `money` field from older saves into the family pot, then drop it.
 		if pet.has("money"):
@@ -169,6 +178,9 @@ static func generate_random_pet(overrides: Dictionary = {}) -> Dictionary:
 		"gender": random_gender(),
 		"school": null,
 		"job": null,
+		"clubs": [],
+		"bonds": {},
+		"action_cooldowns": {},
 	}
 	for k in overrides:
 		pet[k] = overrides[k]

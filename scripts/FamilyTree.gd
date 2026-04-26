@@ -22,6 +22,7 @@ var _slot_indicators: Dictionary = {}
 @onready var zoom_slider: VSlider = %ZoomSlider
 @onready var stat_modal: Control = %StatModal
 @onready var act_modal: Control = %ActModal
+@onready var club_picker_modal: Control = %ClubPickerModal
 @onready var child_birth_modal: Control = %ChildBirthModal
 
 var _radial_menu: RadialMenu
@@ -63,6 +64,9 @@ func _ready() -> void:
 	EventManager.child_naming_requested.connect(_on_child_naming_requested)
 	EventManager.child_born.connect(_on_child_born)
 	child_birth_modal.confirmed.connect(_on_child_birth_confirmed)
+	act_modal.picker_requested.connect(_on_picker_requested)
+	club_picker_modal.club_chosen.connect(_on_club_chosen)
+	club_picker_modal.cancelled.connect(_on_picker_cancelled)
 	visibility_changed.connect(_on_visibility_changed)
 
 	stage_viewport.gui_input.connect(_on_stage_input)
@@ -199,6 +203,38 @@ func _open_radial_for_pet(pet: Dictionary, slot_index: int) -> void:
 	# whenever the StageCanvas isn't at zoom 1.0.
 	var center: Vector2 = slot.get_global_transform_with_canvas() * (slot.size * 0.5) + _RADIAL_CENTER_OFFSET
 	_radial_menu.open_at(center, items)
+
+var _picker_pet_id: String = ""
+
+func _on_picker_requested(picker_type: String, pet_id: String) -> void:
+	_picker_pet_id = pet_id
+	var pet := PetStore.find_by_id(pet_id)
+	if pet.is_empty():
+		return
+	match picker_type:
+		"club":
+			club_picker_modal.show_for(pet)
+
+func _on_club_chosen(club_id: String) -> void:
+	var pet := PetStore.find_by_id(_picker_pet_id)
+	if pet.is_empty():
+		return
+	var clubs: Array = pet.get("clubs", [])
+	if not (club_id in clubs):
+		clubs.append(club_id)
+		pet["clubs"] = clubs
+		PetStore.persist()
+	# Cooldown stamps go on the pet so the same picker can't be re-fired
+	# until enough game-minutes have elapsed.
+	Actions.set_cooldown(pet, "join_club")
+	# Reopen ActModal so the player sees the new club-specific activity.
+	act_modal.show_for(pet)
+
+func _on_picker_cancelled() -> void:
+	# Reopen the action list so the player can pick something else.
+	var pet := PetStore.find_by_id(_picker_pet_id)
+	if not pet.is_empty():
+		act_modal.show_for(pet)
 
 func _on_radial_item_selected(id: String) -> void:
 	# Restore z_index immediately so the modal that follows can dim the

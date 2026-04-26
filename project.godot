@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 I18n="*res://scripts/I18n.gd"
 GameClock="*res://scripts/GameClock.gd"
+CatalogLoader="*res://scripts/CatalogLoader.gd"
 EventManager="*res://scripts/EventManager.gd"
 
 [display]

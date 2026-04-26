@@ -15,7 +15,11 @@ const FEMALE_COLOR := Color(0.92, 0.40, 0.55, 1)
 @onready var character_name_label: Label = %CharacterName
 @onready var gender_mark: Label = %GenderMark
 @onready var age_label: Label = %AgeLabel
+@onready var job_label: Label = %JobLabel
+@onready var salary_label: Label = %SalaryLabel
 @onready var stats_grid: GridContainer = %StatsGrid
+@onready var clubs_label: Label = %ClubsLabel
+@onready var bonds_label: Label = %BondsLabel
 @onready var confirm_button: Button = %ConfirmButton
 
 var _stat_bars: Dictionary = {}
@@ -82,6 +86,8 @@ func _render(pet: Dictionary) -> void:
 		age_label.text = "사망 (%d일 살았음)" % lifespan_days
 		age_label.modulate = Color(0.55, 0.5, 0.55, 1)
 
+	_apply_job_label(pet, alive)
+
 	var current := Stats.current_stats(pet, now)
 	for k in Stats.KEYS:
 		var v: int = int(current.get(k, 0))
@@ -89,6 +95,54 @@ func _render(pet: Dictionary) -> void:
 			_stat_bars[k].value = v
 		if _stat_values.has(k):
 			_stat_values[k].text = "%d/%d" % [v, Stats.STAT_MAX]
+
+	_apply_clubs_label(pet)
+	_apply_bonds_label(pet)
+
+func _apply_job_label(pet: Dictionary, alive: bool) -> void:
+	var job_id: Variant = pet.get("job")
+	if job_id == null or String(job_id) == "" or not alive:
+		job_label.visible = false
+		salary_label.visible = false
+		return
+	var label_text: String = Jobs.label(String(job_id))
+	if label_text == "":
+		job_label.visible = false
+		salary_label.visible = false
+		return
+	job_label.text = "직업: %s" % label_text
+	job_label.visible = true
+	salary_label.text = "급여: %d원/s" % Jobs.income_per_second(String(job_id))
+	salary_label.visible = true
+
+func _apply_clubs_label(pet: Dictionary) -> void:
+	var clubs: Array = pet.get("clubs", [])
+	if clubs.is_empty():
+		clubs_label.visible = false
+		return
+	var labels: Array = []
+	for id in clubs:
+		labels.append(Clubs.label(String(id)))
+	clubs_label.text = "동호회: %s" % ", ".join(labels)
+	clubs_label.visible = true
+
+func _apply_bonds_label(pet: Dictionary) -> void:
+	var bonds: Dictionary = pet.get("bonds", {})
+	if bonds.is_empty():
+		bonds_label.visible = false
+		return
+	# Show top 5 bonds by value, descending.
+	var entries: Array = bonds.keys().map(func(name): return [String(name), int(bonds[name])])
+	entries.sort_custom(func(a, b): return a[1] > b[1])
+	var pieces: Array = []
+	for e in entries.slice(0, 5):
+		pieces.append("%s ×%d" % [e[0], e[1]])
+	var more: int = max(0, entries.size() - 5)
+	var text: String = "인연: " + ", ".join(pieces)
+	if more > 0:
+		text += " 외 %d명" % more
+	bonds_label.text = text
+	bonds_label.visible = true
 
 func _apply_gender_mark(gender: String) -> void:
 	match gender:

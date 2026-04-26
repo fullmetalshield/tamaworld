@@ -1,10 +1,17 @@
 extends Control
 
 # Action-only view of a pet: shows the catalogue of available actions as
-# buttons, overlays a thick donut on the running one, and disables the rest
+# rows, overlays a thick donut on the running one, and disables the rest
 # while busy. Stats live in StatModal.
+#
+# The "club_activity" CATALOG entry is special — it expands into one row per
+# joined club (e.g. "독서하기", "축구하기"), with the underlying action id
+# remaining "club_activity" and the active_action carrying a `club_id` so
+# the right bond pool is tapped on completion. Row keys in `_action_slots`
+# are therefore: action_id for normal rows, "club_act:<club_id>" for clubs.
 
 signal confirmed
+signal picker_requested(picker_type: String, pet_id: String)
 
 const FONT := preload("res://assets/fonts/neodgm.ttf")
 const TEXT_COLOR := Color(0.32, 0.18, 0.24, 1)
@@ -14,6 +21,7 @@ const ROW_DONUT_SIZE := 32.0
 const ROW_DONUT_THICKNESS := 6.0
 const ROW_PADDING_X := 16.0
 const ROW_CORNER := 12
+const CLUB_ROW_PREFIX := "club_act:"
 
 @onready var character_name_label: Label = %CharacterName
 @onready var actions_list: VBoxContainer = %ActionsList
@@ -31,13 +39,14 @@ func _process(_delta: float) -> void:
 	if not visible or _current_pet_id == "":
 		return
 	var pet := PetStore.find_by_id(_current_pet_id)
-	if pet.is_empty() or not Actions.is_busy(pet):
+	if pet.is_empty():
 		return
-	var rewards := Actions.tick(pet)
-	if not rewards.is_empty():
-		_render(pet)
-	else:
-		_refresh_action_states(pet)
+	if Actions.is_busy(pet):
+		var rewards := Actions.tick(pet)
+		if not rewards.is_empty():
+			_render(pet)
+			return
+	_refresh_action_states(pet)
 
 func show_for(pet: Dictionary) -> void:
 	_current_pet_id = pet.get("id", "")
@@ -52,24 +61,56 @@ func _render(pet: Dictionary) -> void:
 	var is_protagonist: bool = not proto.is_empty() and pet.get("id", "") == proto.get("id", "")
 	var can_act: bool = alive and is_protagonist
 	var ids: Array = Actions.available_ids(pet, now) if can_act else []
-	var has_actions: bool = not ids.is_empty()
-	actions_list.visible = has_actions
-	empty_label.visible = not has_actions
-	if has_actions:
-		_rebuild_actions(pet, now)
+	var rows: Array = _expand_rows(pet, ids)
+	var has_rows: bool = not rows.is_empty()
+	actions_list.visible = has_rows
+	empty_label.visible = not has_rows
+	if has_rows:
+		_rebuild_actions(pet, rows)
 	else:
 		_action_slots.clear()
 		for child in actions_list.get_children():
 			child.queue_free()
 
-func _rebuild_actions(pet: Dictionary, now_minutes: int) -> void:
+# Turns the flat available_ids list into the row descriptors actually shown:
+# regular actions stay as-is; the `club_activity` entry is replaced by one
+# row per joined club (with that club's flavour label/colour).
+func _expand_rows(pet: Dictionary, ids: Array) -> Array:
+	var rows: Array = []
+	for id in ids:
+		if id == "club_activity":
+			var template: Dictionary = Actions.CATALOG[id]
+			for club_id in pet.get("clubs", []):
+				rows.append({
+					"row_id": CLUB_ROW_PREFIX + String(club_id),
+					"action_id": "club_activity",
+					"club_id": String(club_id),
+					"label": Clubs.activity_label(String(club_id)),
+					"progress_label": Clubs.progress_label(String(club_id)),
+					"color": Clubs.color(String(club_id)),
+					"template": template,
+				})
+		else:
+			var entry: Dictionary = Actions.CATALOG[id]
+			rows.append({
+				"row_id": id,
+				"action_id": id,
+				"club_id": "",
+				"label": tr(entry.label_key),
+				"progress_label": tr(entry.get("progress_label_key", entry.label_key)),
+				"color": entry.get("color", Color(0.95, 0.86, 0.88, 1)),
+				"template": entry,
+			})
+	return rows
+
+func _rebuild_actions(pet: Dictionary, rows: Array) -> void:
 	for child in actions_list.get_children():
 		child.queue_free()
 	_action_slots.clear()
-	var ids: Array = Actions.available_ids(pet, now_minutes)
-	for id in ids:
-		var action: Dictionary = Actions.CATALOG[id]
-		var color: Color = action.get("color", Color(0.95, 0.86, 0.88, 1))
+	for row_data in rows:
+		var row_id: String = row_data.row_id
+		var color: Color = row_data.color
+		var template: Dictionary = row_data.template
 
 		var row := HBoxContainer.new()
 		row.custom_minimum_size = Vector2(0, ROW_HEIGHT)
@@ -85,11 +126,9 @@ func _rebuild_actions(pet: Dictionary, now_minutes: int) -> void:
 		btn.add_theme_stylebox_override("pressed", _row_style(color.darkened(0.08)))
 		btn.add_theme_stylebox_override("focus", _row_style(color))
 		btn.add_theme_stylebox_override("disabled", _row_style(_desaturate(color, 0.6)))
-		btn.pressed.connect(_on_action_pressed.bind(id))
+		btn.pressed.connect(_on_row_pressed.bind(row_id))
 		row.add_child(btn)
 
-		# The button owns its label/meta as children so the colour fills
-		# edge-to-edge while text/meta sit padded inside.
 		var content := HBoxContainer.new()
 		content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		content.offset_left = ROW_PADDING_X
@@ -104,7 +143,7 @@ func _rebuild_actions(pet: Dictionary, now_minutes: int) -> void:
 		name_label.add_theme_color_override("font_color", TEXT_COLOR)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		name_label.text = tr(action.label_key)
+		name_label.text = row_data.label
 		content.add_child(name_label)
 
 		var meta_label := Label.new()
@@ -112,7 +151,7 @@ func _rebuild_actions(pet: Dictionary, now_minutes: int) -> void:
 		meta_label.add_theme_font_size_override("font_size", 14)
 		meta_label.add_theme_color_override("font_color", META_COLOR)
 		meta_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		meta_label.text = _meta_text(action)
+		meta_label.text = _meta_text(template)
 		content.add_child(meta_label)
 
 		var donut_slot := Control.new()
@@ -129,7 +168,13 @@ func _rebuild_actions(pet: Dictionary, now_minutes: int) -> void:
 		row.add_child(donut_slot)
 
 		actions_list.add_child(row)
-		_action_slots[id] = {"btn": btn, "donut": donut, "name": name_label}
+		_action_slots[row_id] = {
+			"btn": btn,
+			"donut": donut,
+			"name": name_label,
+			"meta": meta_label,
+			"row_data": row_data,
+		}
 	_refresh_action_states(pet)
 
 func _row_style(color: Color) -> StyleBoxFlat:
@@ -154,18 +199,14 @@ func _desaturate(color: Color, factor: float) -> Color:
 	)
 
 func _meta_text(action: Dictionary) -> String:
-	# School enrollment shows the ongoing per-second cost rather than the
-	# enrolment animation length, since the cost is the actually meaningful
-	# number for the player.
+	if String(action.get("opens_picker", "")) != "":
+		return "선택지"
 	var sets_school: String = String(action.get("sets_school", ""))
 	if sets_school != "":
 		var cost: int = Schools.cost_per_second(sets_school)
 		if cost > 0:
 			return "초당 -%d원" % cost
 		return "무료"
-	# Internal `duration` is in game-minutes (1 real second each). Display as
-	# the equivalent real-time minutes so "1분/2분/3분" matches what the
-	# player actually waits.
 	var dur_game_min: int = int(action.get("duration", 0))
 	var display_min: int = max(1, int(round(float(dur_game_min) / 60.0)))
 	var money: int = int(action.get("money_reward", 0))
@@ -173,31 +214,85 @@ func _meta_text(action: Dictionary) -> String:
 		return "%d분 · +%d원" % [display_min, money]
 	return "%d분" % display_min
 
+func _format_cooldown(remaining_game_min: int) -> String:
+	if remaining_game_min <= 0:
+		return ""
+	# Game-min = real-sec at 1:1, so render in real-time units the player
+	# actually waits. Sub-minute remainders show as seconds.
+	if remaining_game_min < 60:
+		return "%d초 후 가능" % remaining_game_min
+	var real_min: int = int(round(float(remaining_game_min) / 60.0))
+	return "%d분 후 가능" % real_min
+
+# Returns the active row_id (e.g. "play" or "club_act:reading") if the pet
+# has an action running, else "".
+func _active_row_id(pet: Dictionary) -> String:
+	var a: Variant = pet.get("active_action")
+	if not (a is Dictionary):
+		return ""
+	var id: String = String(a.get("id", ""))
+	if id == "club_activity":
+		var club_id: String = String(a.get("club_id", ""))
+		if club_id != "":
+			return CLUB_ROW_PREFIX + club_id
+	return id
+
 func _refresh_action_states(pet: Dictionary) -> void:
 	var busy: bool = Actions.is_busy(pet)
-	var current_id: String = Actions.active_id(pet)
+	var active_row: String = _active_row_id(pet)
 	var current_progress: float = Actions.progress(pet) if busy else 0.0
-	for id in _action_slots:
-		var slot: Dictionary = _action_slots[id]
+	for row_id in _action_slots:
+		var slot: Dictionary = _action_slots[row_id]
 		var btn: Button = slot.btn
 		var donut: DonutProgress = slot.donut
 		var name_label: Label = slot.name
-		var action: Dictionary = Actions.CATALOG[id]
-		btn.disabled = busy
-		var is_active: bool = id == current_id
+		var meta_label: Label = slot.meta
+		var row_data: Dictionary = slot.row_data
+		var template: Dictionary = row_data.template
+		var on_cooldown: bool = false
+		var cd_remaining: int = 0
+		# Only the underlying action_id carries cooldown state — multiple
+		# club rows share the same id but here only "join_club" actually
+		# uses cooldowns, so this is unambiguous in practice.
+		if int(template.get("cooldown_minutes", 0)) > 0:
+			cd_remaining = Actions.cooldown_remaining_minutes(pet, String(row_data.action_id))
+			on_cooldown = cd_remaining > 0
+		var is_active: bool = row_id == active_row
+		btn.disabled = busy or on_cooldown
 		donut.visible = is_active
 		if is_active:
 			donut.progress = current_progress
-			name_label.text = tr(action.get("progress_label_key", action.label_key))
+			name_label.text = row_data.progress_label
+			meta_label.text = _meta_text(template)
 		else:
-			name_label.text = tr(action.label_key)
+			name_label.text = row_data.label
+			if on_cooldown:
+				meta_label.text = _format_cooldown(cd_remaining)
+			else:
+				meta_label.text = _meta_text(template)
 
-func _on_action_pressed(action_id: String) -> void:
+func _on_row_pressed(row_id: String) -> void:
 	var pet := PetStore.find_by_id(_current_pet_id)
 	if pet.is_empty():
 		return
-	if not Actions.start(pet, action_id):
+	var slot: Dictionary = _action_slots.get(row_id, {})
+	if slot.is_empty():
 		return
+	var row_data: Dictionary = slot.row_data
+	var action_id: String = String(row_data.action_id)
+	var template: Dictionary = row_data.template
+	# Picker-style actions don't run as timed waits — open a modal instead.
+	var picker: String = String(template.get("opens_picker", ""))
+	if picker != "":
+		visible = false
+		picker_requested.emit(picker, _current_pet_id)
+		return
+	if action_id == "club_activity":
+		if not Actions.start_club_activity(pet, String(row_data.club_id)):
+			return
+	else:
+		if not Actions.start(pet, action_id):
+			return
 	_refresh_action_states(pet)
 
 func _on_confirm_pressed() -> void:

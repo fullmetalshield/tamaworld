@@ -1,0 +1,19 @@
+{
+  "catalog": {
+    "reading":  {"label": "독서 동호회",   "activity_label": "독서하기",   "progress_label": "독서 중",   "color": "#D9C7F2"},
+    "football": {"label": "축구 동호회",   "activity_label": "축구하기",   "progress_label": "축구 중",   "color": "#C7F2D9"},
+    "baking":   {"label": "베이킹 동호회", "activity_label": "베이킹하기", "progress_label": "베이킹 중", "color": "#FFE0C7"},
+    "music":    {"label": "음악 동호회",   "activity_label": "연주하기",   "progress_label": "연주 중",   "color": "#FFC7EB"},
+    "hiking":   {"label": "등산 동호회",   "activity_label": "등산하기",   "progress_label": "등산 중",   "color": "#D9F2C7"},
+    "gaming":   {"label": "게임 동호회",   "activity_label": "게임하기",   "progress_label": "게임 중",   "color": "#C7D9FF"},
+    "photo":    {"label": "사진 동호회",   "activity_label": "촬영하기",   "progress_label": "촬영 중",   "color": "#EBEBF2"},
+    "yoga":     {"label": "요가 동호회",   "activity_label": "요가하기",   "progress_label": "요가 중",   "color": "#F2EBC7"},
+    "coding":   {"label": "코딩 동호회",   "activity_label": "코딩하기",   "progress_label": "코딩 중",   "color": "#C7EBF2"},
+    "movie":    {"label": "영화 동호회",   "activity_label": "영화보기",   "progress_label": "영화 중",   "color": "#F2D9D9"}
+  },
+  "npc_names": [
+    "지은", "민수", "유진", "현우", "예린", "도윤", "수아",
+    "한결", "하늘", "태양", "보윤", "다온", "라온", "예나",
+    "찬우", "서아", "노아", "리안", "지원", "은서"
+  ]
+}

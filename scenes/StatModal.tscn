@@ -81,6 +81,26 @@ theme_override_font_sizes/font_size = 18
 text = "1일차 / 1일 (유년기)"
 horizontal_alignment = 1
 
+[node name="JobLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.32, 0.45, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = ""
+horizontal_alignment = 1
+visible = false
+
+[node name="SalaryLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.55, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = ""
+horizontal_alignment = 1
+visible = false
+
 [node name="HSeparator" type="HSeparator" parent="PanelCenter/ModalPanel/VBox"]
 layout_mode = 2
 
@@ -90,6 +110,27 @@ layout_mode = 2
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 8
 columns = 3
+
+[node name="ClubsLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.32, 0.55, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = ""
+horizontal_alignment = 1
+visible = false
+
+[node name="BondsLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.35, 0.42, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 3
+visible = false
 
 [node name="Spacer" type="Control" parent="PanelCenter/ModalPanel/VBox"]
 layout_mode = 2

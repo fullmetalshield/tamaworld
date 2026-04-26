@@ -1,0 +1,81 @@
+{
+  "catalog": {
+    "play": {
+      "label_key": "ACTION_PLAY",
+      "progress_label_key": "ACTION_PLAY_PROGRESS",
+      "duration": 120,
+      "effects": {"charisma": 1, "luck": 1},
+      "money_reward": 5,
+      "color": "#FFC7D6",
+      "phases": ["toddler", "child", "teen", "young_adult", "middle_aged", "mature"]
+    },
+    "study": {
+      "label_key": "ACTION_STUDY",
+      "progress_label_key": "ACTION_STUDY_PROGRESS",
+      "duration": 180,
+      "effects": {"intelligence": 1},
+      "money_reward": 10,
+      "color": "#C7D9FF",
+      "phases": ["child", "teen", "young_adult", "middle_aged"]
+    },
+    "rest": {
+      "label_key": "ACTION_REST",
+      "progress_label_key": "ACTION_REST_PROGRESS",
+      "duration": 60,
+      "effects": {"stamina": 1},
+      "money_reward": 0,
+      "color": "#B8EDD4",
+      "phases": ["infant", "toddler", "child", "teen", "young_adult", "middle_aged", "mature", "elder"]
+    },
+    "school_public": {
+      "label_key": "ACTION_SCHOOL_PUBLIC",
+      "progress_label_key": "ACTION_SCHOOL_ENROLL_PROGRESS",
+      "duration": 1,
+      "effects": {},
+      "money_reward": 0,
+      "color": "#D1EDC7",
+      "phases": ["child"],
+      "sets_school": "public"
+    },
+    "school_private": {
+      "label_key": "ACTION_SCHOOL_PRIVATE",
+      "progress_label_key": "ACTION_SCHOOL_ENROLL_PROGRESS",
+      "duration": 1,
+      "effects": {},
+      "money_reward": 0,
+      "color": "#D1E0FF",
+      "phases": ["child"],
+      "sets_school": "private"
+    },
+    "school_elite": {
+      "label_key": "ACTION_SCHOOL_ELITE",
+      "progress_label_key": "ACTION_SCHOOL_ENROLL_PROGRESS",
+      "duration": 1,
+      "effects": {},
+      "money_reward": 0,
+      "color": "#F7E0A6",
+      "phases": ["child"],
+      "sets_school": "elite"
+    },
+    "join_club": {
+      "label_key": "ACTION_JOIN_CLUB",
+      "duration": 1,
+      "effects": {},
+      "money_reward": 0,
+      "color": "#EDD9FF",
+      "phases": ["young_adult", "middle_aged", "mature"],
+      "opens_picker": "club",
+      "cooldown_minutes": 1440
+    },
+    "club_activity": {
+      "label_key": "ACTION_CLUB_ACTIVITY",
+      "progress_label_key": "ACTION_CLUB_ACTIVITY_PROGRESS",
+      "duration": 90,
+      "effects": {"charisma": 1},
+      "money_reward": 0,
+      "color": "#DBC7F7",
+      "phases": ["young_adult", "middle_aged", "mature"],
+      "requires_club": true
+    }
+  }
+}

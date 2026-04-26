@@ -6,6 +6,7 @@
 [ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="4_font"]
 [ext_resource type="PackedScene" path="res://scenes/StatModal.tscn" id="5_stat"]
 [ext_resource type="PackedScene" path="res://scenes/ActModal.tscn" id="5_act"]
+[ext_resource type="PackedScene" path="res://scenes/ClubPickerModal.tscn" id="5_clubpick"]
 [ext_resource type="PackedScene" path="res://scenes/ChildBirthModal.tscn" id="6_cbm"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_banner"]
@@ -280,6 +281,10 @@ unique_name_in_owner = true
 visible = false
 
 [node name="ActModal" parent="." instance=ExtResource("5_act")]
+unique_name_in_owner = true
+visible = false
+
+[node name="ClubPickerModal" parent="." instance=ExtResource("5_clubpick")]
 unique_name_in_owner = true
 visible = false
 
