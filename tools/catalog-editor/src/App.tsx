@@ -8,8 +8,9 @@ import { loadCatalog, saveCatalog } from './api';
 import { validate } from './validation';
 import { Inspector } from './components/Inspector';
 import { PhasesView } from './components/PhasesView';
+import { TreeView } from './components/TreeView';
 
-type TabName = CatalogName | 'phases';
+type TabName = CatalogName | 'phases' | 'tree';
 
 const TABS: { id: TabName; label: string }[] = [
   { id: 'actions', label: '행동' },
@@ -17,6 +18,7 @@ const TABS: { id: TabName; label: string }[] = [
   { id: 'schools', label: '학교' },
   { id: 'jobs',    label: '직업' },
   { id: 'phases',  label: '단계 미리보기' },
+  { id: 'tree',    label: '트리 뷰' },
 ];
 
 const DEFAULT_ENTRIES: Record<CatalogName, () => any> = {
@@ -179,7 +181,17 @@ export default function App() {
         <PhasesView actions={actions} clubs={clubs} />
       )}
 
-      {ready && tab !== 'phases' && (
+      {ready && tab === 'tree' && actions && clubs && schools && (
+        <TreeView
+          actions={actions}
+          clubs={clubs}
+          schools={schools}
+          onActionsChange={next => { setActions(next); markDirty('actions'); }}
+          onSelectAction={id => { setSelected(prev => ({ ...prev, actions: id })); setTab('actions'); }}
+        />
+      )}
+
+      {ready && tab !== 'phases' && tab !== 'tree' && (
         <CatalogPanel
           name={tab}
           file={getFile(tab)!}
