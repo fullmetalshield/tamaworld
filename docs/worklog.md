@@ -15,6 +15,20 @@
   - `_meta_text`가 `money_cost`도 인식해 라벨에 "-N원" 포함, `money_reward`와 함께 있을 경우 둘 다 표기 가능 (`90분 · -20원 · +0원` 등 — reward=0이면 생략).
   - 잔액 부족 시 row 버튼 비활성화 + 메타 라벨 "N원 부족". 진행 중인 row는 잔액 부족이어도 disabled 처리에서 제외(이미 시작된 것은 그대로 진행).
 
+### 데이트 시간/쿨다운 유저 시간 기준으로 재조정
+- 데이트 쿨다운/지속시간을 게임분 기준 → 실시간 기준 단위로 늘려, 데이트 중 상태가 슬롯 인디케이터에 충분히 보이도록.
+- [scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd) `DATE_COOLDOWN_MIN`: 3 → **180** (실시간 3분).
+- [data/actions.json](../data/actions.json) `date.duration`: 1 → **120** (실시간 2분).
+- 데이트 성공 시 `Actions.start_date`가 양쪽 펫의 `active_action.id`를 "date"로 세팅하므로 슬롯 인디케이터(donut + "데이트 중")가 자동으로 2분간 노출됨. 별도 변경 없음.
+
+### BondDetailModal 컴팩트화
+- 모달 높이가 작은 창에서 잘리는 문제. [scenes/BondDetailModal.tscn](../scenes/BondDetailModal.tscn) 내부 콘텐츠를 줄여 화면에 잘 들어오도록 조정.
+- 변경:
+  - `ModalPanel.custom_minimum_size`: (420, 520) → **(420, 420)**
+  - `Tabs.custom_minimum_size`: (0, 240) → **(0, 160)** — 능력치를 숨겼더니 240은 과대했음.
+  - 메인 VBox `separation`: 10 → 6, 행동 탭 `separation`: 14 → 8, `TopSpacer` 12 → 6.
+  - 행동 버튼 StyleBox 4종(hangout/gift/date 각 normal+hover, disabled)의 `content_margin_top/bottom`: 10 → 6 — 버튼 자체도 살짝 컴팩트.
+
 ### 인연 인터랙션 쿨다운 표시 실시간화
 - BondDetailModal의 hangout / date 쿨다운이 그동안 게임분 단위(`120분 후`, `3분 후`)로 표시돼 실제 대기 시간(=실시간 초)과 단위가 어긋나던 문제. GameClock이 1게임분=1실초로 돌기 때문에 유저가 보는 단위로 환산해 표기.
 - [scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd):

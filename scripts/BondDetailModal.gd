@@ -19,7 +19,7 @@ const HANGOUT_COOLDOWN_MIN := 120  # 2 game-hours between hangouts
 const HANGOUT_BOND_DELTA := 1
 const GIFT_COST := 50
 const GIFT_BOND_DELTA := 2
-const DATE_COOLDOWN_MIN := 3  # 3 game-minutes, applied whether the date succeeds or not
+const DATE_COOLDOWN_MIN := 180  # 3 real-minutes (1 game-min == 1 real-sec)
 const DATE_BOND_DELTA := 3
 # Probability the partner accepts a date proposal: 30% baseline plus 3% per
 # point of accumulated mutual bond, capped at 95%. This lets the player nudge

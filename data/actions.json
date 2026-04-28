@@ -81,7 +81,7 @@
     "date": {
       "label_key": "ACTION_DATE",
       "progress_label_key": "ACTION_DATE_PROGRESS",
-      "duration": 1,
+      "duration": 120,
       "effects": {},
       "money_reward": 0,
       "color": "#FFB6C1",

@@ -6,9 +6,9 @@
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_hangout"]
 content_margin_left = 18.0
-content_margin_top = 10.0
+content_margin_top = 6.0
 content_margin_right = 18.0
-content_margin_bottom = 10.0
+content_margin_bottom = 6.0
 bg_color = Color(0.78, 0.88, 0.96, 1)
 border_width_left = 2
 border_width_top = 2
@@ -23,9 +23,9 @@ anti_aliasing_size = 1.5
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_hangout_hover"]
 content_margin_left = 18.0
-content_margin_top = 10.0
+content_margin_top = 6.0
 content_margin_right = 18.0
-content_margin_bottom = 10.0
+content_margin_bottom = 6.0
 bg_color = Color(0.62, 0.78, 0.92, 1)
 border_width_left = 2
 border_width_top = 2
@@ -40,9 +40,9 @@ anti_aliasing_size = 1.5
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_gift"]
 content_margin_left = 18.0
-content_margin_top = 10.0
+content_margin_top = 6.0
 content_margin_right = 18.0
-content_margin_bottom = 10.0
+content_margin_bottom = 6.0
 bg_color = Color(1.0, 0.86, 0.74, 1)
 border_width_left = 2
 border_width_top = 2
@@ -57,9 +57,9 @@ anti_aliasing_size = 1.5
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_gift_hover"]
 content_margin_left = 18.0
-content_margin_top = 10.0
+content_margin_top = 6.0
 content_margin_right = 18.0
-content_margin_bottom = 10.0
+content_margin_bottom = 6.0
 bg_color = Color(0.96, 0.74, 0.55, 1)
 border_width_left = 2
 border_width_top = 2
@@ -74,9 +74,9 @@ anti_aliasing_size = 1.5
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_date"]
 content_margin_left = 18.0
-content_margin_top = 10.0
+content_margin_top = 6.0
 content_margin_right = 18.0
-content_margin_bottom = 10.0
+content_margin_bottom = 6.0
 bg_color = Color(1.0, 0.78, 0.86, 1)
 border_width_left = 2
 border_width_top = 2
@@ -91,9 +91,9 @@ anti_aliasing_size = 1.5
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_date_hover"]
 content_margin_left = 18.0
-content_margin_top = 10.0
+content_margin_top = 6.0
 content_margin_right = 18.0
-content_margin_bottom = 10.0
+content_margin_bottom = 6.0
 bg_color = Color(0.96, 0.58, 0.72, 1)
 border_width_left = 2
 border_width_top = 2
@@ -108,9 +108,9 @@ anti_aliasing_size = 1.5
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_btn_disabled"]
 content_margin_left = 18.0
-content_margin_top = 10.0
+content_margin_top = 6.0
 content_margin_right = 18.0
-content_margin_bottom = 10.0
+content_margin_bottom = 6.0
 bg_color = Color(0.92, 0.92, 0.92, 1)
 border_width_left = 2
 border_width_top = 2
@@ -164,12 +164,12 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="ModalPanel" type="PanelContainer" parent="PanelCenter"]
-custom_minimum_size = Vector2(420, 520)
+custom_minimum_size = Vector2(420, 420)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBox_panel")
 
 [node name="VBox" type="VBoxContainer" parent="PanelCenter/ModalPanel"]
-theme_override_constants/separation = 10
+theme_override_constants/separation = 6
 
 [node name="HeaderRow" type="HBoxContainer" parent="PanelCenter/ModalPanel/VBox"]
 layout_mode = 2
@@ -211,7 +211,7 @@ scale = Vector2(0.5, 0.5)
 
 [node name="Tabs" type="TabContainer" parent="PanelCenter/ModalPanel/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 240)
+custom_minimum_size = Vector2(0, 160)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_fonts/font = ExtResource("2_font")
@@ -277,10 +277,10 @@ visible = false
 [node name="행동" type="VBoxContainer" parent="PanelCenter/ModalPanel/VBox/Tabs"]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 8
 
 [node name="TopSpacer" type="Control" parent="PanelCenter/ModalPanel/VBox/Tabs/행동"]
-custom_minimum_size = Vector2(0, 12)
+custom_minimum_size = Vector2(0, 6)
 layout_mode = 2
 
 [node name="HangoutButton" type="Button" parent="PanelCenter/ModalPanel/VBox/Tabs/행동"]
