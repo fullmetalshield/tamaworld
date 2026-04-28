@@ -16,6 +16,7 @@ static func create_child(parent_a: Dictionary, parent_b: Dictionary, all_pets: A
 	var ancestors := _collect_ancestors([parent_a, parent_b], all_pets)
 	var child := {
 		"id": PetStore.make_uid(),
+		"kind": "family",
 		"given_name": PetStore.GIVEN_NAMES[randi() % PetStore.GIVEN_NAMES.size()],
 		"parent_ids": [parent_a.get("id", ""), parent_b.get("id", "")],
 		"spouse_id": null,
@@ -30,6 +31,7 @@ static func create_child(parent_a: Dictionary, parent_b: Dictionary, all_pets: A
 		"clubs": [],
 		"bonds": {},
 		"action_cooldowns": {},
+		"bond_cooldowns": {},
 	}
 	for gene in GENES:
 		child[gene] = _roll_gene(gene, parent_a, parent_b, ancestors)

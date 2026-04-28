@@ -1,11 +1,3 @@
 res://scenes/StatModal.tscn
-res://scripts/Actions.gd
-res://scripts/ActModal.gd
-res://scripts/EventManager.gd
 res://scripts/FamilyTree.gd
-res://scripts/Genetics.gd
-res://scripts/PetStore.gd
 res://scripts/StatModal.gd
-res://scripts/Clubs.gd
-res://scripts/Jobs.gd
-res://scripts/Schools.gd

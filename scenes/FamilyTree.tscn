@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://b0tamaa0a0004"]
+[gd_scene load_steps=10 format=3 uid="uid://b0tamaa0a0004"]
 
 [ext_resource type="Script" path="res://scripts/FamilyTree.gd" id="1_ft"]
 [ext_resource type="PackedScene" path="res://scenes/Tamagotchi.tscn" id="2_tama"]
@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ActModal.tscn" id="5_act"]
 [ext_resource type="PackedScene" path="res://scenes/ClubPickerModal.tscn" id="5_clubpick"]
 [ext_resource type="PackedScene" path="res://scenes/ChildBirthModal.tscn" id="6_cbm"]
+[ext_resource type="PackedScene" path="res://scenes/BondModal.tscn" id="7_bond"]
+[ext_resource type="PackedScene" path="res://scenes/BondDetailModal.tscn" id="8_bonddet"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_banner"]
 content_margin_left = 14.0
@@ -289,5 +291,13 @@ unique_name_in_owner = true
 visible = false
 
 [node name="ChildBirthModal" parent="." instance=ExtResource("6_cbm")]
+unique_name_in_owner = true
+visible = false
+
+[node name="BondModal" parent="." instance=ExtResource("7_bond")]
+unique_name_in_owner = true
+visible = false
+
+[node name="BondDetailModal" parent="." instance=ExtResource("8_bonddet")]
 unique_name_in_owner = true
 visible = false

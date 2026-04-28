@@ -65,6 +65,14 @@ static func _migrate_pets() -> void:
 		if not pet.has("action_cooldowns"):
 			pet["action_cooldowns"] = {}
 			changed = true
+		if not pet.has("bond_cooldowns"):
+			pet["bond_cooldowns"] = {}
+			changed = true
+		if not pet.has("kind"):
+			# Inferred from family relations: anyone connected by spouse/parent
+			# is "family"; standalone pets from earlier sessions are "npc".
+			pet["kind"] = "family"
+			changed = true
 		# Money is now family-wide (Family.gd). Sweep any leftover per-pet
 		# `money` field from older saves into the family pot, then drop it.
 		if pet.has("money"):
@@ -83,8 +91,55 @@ static func _migrate_pets() -> void:
 				var age := Stats.age_minutes(pet, now_total)
 				if age < int(pet["lifespan_minutes"]):
 					pet["died_at_minutes"] = null
+	# Promote legacy name-keyed bonds (`{name: count}`) to id-keyed ones,
+	# spawning NPC pets to back each previously string-only bond.
+	if _migrate_legacy_bonds():
+		changed = true
 	if changed:
 		persist()
+
+# Old saves stored bonds as `{display_name: count}`. Now bonds key by NPC id so
+# both sides of a relationship can stay in sync. We detect legacy keys (not a
+# 12-hex uid) and substitute a fresh NPC pet for each.
+static func _migrate_legacy_bonds() -> bool:
+	var changed := false
+	for pet in _pets:
+		var bonds: Dictionary = pet.get("bonds", {})
+		if bonds.is_empty():
+			continue
+		var rebuilt: Dictionary = {}
+		var did_swap := false
+		for key in bonds.keys():
+			var k := String(key)
+			if _is_uid(k):
+				rebuilt[k] = int(bonds[key])
+				continue
+			var npc := _find_or_create_npc_by_name(k)
+			var npc_id: String = npc.get("id", "")
+			rebuilt[npc_id] = int(bonds[key])
+			# Reciprocal — NPC also remembers this pet at the same level.
+			var npc_bonds: Dictionary = npc.get("bonds", {})
+			npc_bonds[pet.get("id", "")] = max(int(npc_bonds.get(pet.get("id", ""), 0)), int(bonds[key]))
+			npc["bonds"] = npc_bonds
+			did_swap = true
+		if did_swap:
+			pet["bonds"] = rebuilt
+			changed = true
+	return changed
+
+static func _is_uid(s: String) -> bool:
+	if s.length() != 12:
+		return false
+	for c in s:
+		if not ("0123456789abcdef".contains(c)):
+			return false
+	return true
+
+static func _find_or_create_npc_by_name(display_name: String) -> Dictionary:
+	for p in _pets:
+		if p.get("kind", "") == "npc" and String(p.get("given_name", "")) == display_name:
+			return p
+	return _create_npc_internal(display_name)
 
 static func create_protagonist(name: String) -> Dictionary:
 	var pet := generate_random_pet({"given_name": name})
@@ -162,6 +217,7 @@ static func generate_random_pet(overrides: Dictionary = {}) -> Dictionary:
 	var eyes: Dictionary = all_chars[randi() % all_chars.size()]
 	var pet := {
 		"id": make_uid(),
+		"kind": "family",
 		"given_name": GIVEN_NAMES[randi() % GIVEN_NAMES.size()],
 		"body_id": body.get("id", ""),
 		"eyes_id": eyes.get("id", ""),
@@ -181,10 +237,62 @@ static func generate_random_pet(overrides: Dictionary = {}) -> Dictionary:
 		"clubs": [],
 		"bonds": {},
 		"action_cooldowns": {},
+		"bond_cooldowns": {},
 	}
 	for k in overrides:
 		pet[k] = overrides[k]
 	return pet
+
+# NPCs are full pets — same shape as the protagonist, just not user-controlled.
+# They're born young-adult so they're already working-age, and assigned a
+# random job so the world feels populated. EventManager auto-ticks them along
+# with everyone else.
+static func create_npc(name: String) -> Dictionary:
+	ensure_loaded()
+	var npc := _create_npc_internal(name)
+	persist()
+	return npc
+
+# Internal version used during migration that does NOT call persist (caller
+# batches the write).
+static func _create_npc_internal(name: String) -> Dictionary:
+	var pet := generate_random_pet({"given_name": name, "kind": "npc"})
+	var lifespan: int = int(pet.get("lifespan_minutes", Stats.DAY_MINUTES))
+	# Place NPCs randomly within the 청년기/중년기 band (0.25 ~ 0.65 of life)
+	# so bond candidates feel like a mix of fresh adults and seasoned ones.
+	var p: float = randf_range(0.25, 0.65)
+	var start_age: int = int(p * float(lifespan))
+	pet["born_at_minutes"] = int(GameClock._total_game_minutes) - start_age
+	var job_ids: Array = Jobs.CATALOG.keys()
+	if not job_ids.is_empty():
+		pet["job"] = String(job_ids[randi() % job_ids.size()])
+	_pets.append(pet)
+	return pet
+
+static func find_or_create_npc_by_name(name: String) -> Dictionary:
+	ensure_loaded()
+	for p in _pets:
+		if p.get("kind", "") == "npc" and String(p.get("given_name", "")) == name:
+			return p
+	var npc := _create_npc_internal(name)
+	persist()
+	return npc
+
+# Mutual bond bump — both sides remember each other at +amount.
+static func add_bond(a_id: String, b_id: String, amount: int) -> void:
+	if amount == 0 or a_id == "" or b_id == "" or a_id == b_id:
+		return
+	var a := find_by_id(a_id)
+	var b := find_by_id(b_id)
+	if a.is_empty() or b.is_empty():
+		return
+	var ab: Dictionary = a.get("bonds", {})
+	ab[b_id] = int(ab.get(b_id, 0)) + amount
+	a["bonds"] = ab
+	var bb: Dictionary = b.get("bonds", {})
+	bb[a_id] = int(bb.get(a_id, 0)) + amount
+	b["bonds"] = bb
+	persist()
 
 static func make_uid() -> String:
 	var s := ""

@@ -16,5 +16,6 @@
   "MODAL_ACTIONS_HEADING": {"ko": "행동", "en": "Actions"},
   "HUD_MONEY": {"ko": "%d원", "en": "$%d"},
   "RADIAL_STAT": {"ko": "상태", "en": "STAT"},
-  "RADIAL_ACT": {"ko": "행동", "en": "ACT"}
+  "RADIAL_ACT": {"ko": "행동", "en": "ACT"},
+  "RADIAL_BOND": {"ko": "인연", "en": "BOND"}
 }

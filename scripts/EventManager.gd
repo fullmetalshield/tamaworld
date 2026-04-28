@@ -75,6 +75,10 @@ func _tick_economy() -> void:
 	for pet in PetStore.all():
 		if not Stats.is_alive(pet, now_total):
 			continue
+		# NPCs live their own lives but don't pour money into the player's
+		# family pot — only protagonist + spouse + children contribute.
+		if String(pet.get("kind", "family")) != "family":
+			continue
 		var job_id: Variant = pet.get("job")
 		if job_id != null:
 			net_delta += Jobs.income_per_second(String(job_id))

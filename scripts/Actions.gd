@@ -142,10 +142,11 @@ static func _form_club_bond(pet: Dictionary, club_id: String) -> void:
 		if clubs.is_empty():
 			return
 		club_id = String(clubs[randi() % clubs.size()])
-	var name: String = Clubs.random_member_name()
-	var bonds: Dictionary = pet.get("bonds", {})
-	bonds[name] = int(bonds.get(name, 0)) + 1
-	pet["bonds"] = bonds
+	# Promote the club mate to a full NPC pet (same shape as the protagonist,
+	# just not user-controlled). Reuse by name so repeat encounters compound
+	# the same relationship instead of spawning a fresh person each time.
+	var npc: Dictionary = PetStore.find_or_create_npc_by_name(Clubs.random_member_name())
+	PetStore.add_bond(pet.get("id", ""), npc.get("id", ""), 1)
 
 static func _complete(pet: Dictionary) -> Dictionary:
 	var a: Dictionary = pet.get("active_action", {})
@@ -162,7 +163,9 @@ static func _complete(pet: Dictionary) -> Dictionary:
 		stats[k] = clampi(int(stats.get(k, 5)) + delta, Stats.STAT_MIN, Stats.STAT_MAX)
 	pet["stats"] = stats
 	var money_reward: int = int(action.get("money_reward", 0))
-	if money_reward != 0:
+	# Only family members fund the family pot. NPCs run actions of their own
+	# but their rewards stay off the player's books.
+	if money_reward != 0 and String(pet.get("kind", "family")) == "family":
 		Family.add_money(money_reward)
 	if action.has("sets_school"):
 		pet["school"] = String(action["sets_school"])

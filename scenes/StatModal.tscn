@@ -121,17 +121,6 @@ text = ""
 horizontal_alignment = 1
 visible = false
 
-[node name="BondsLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.35, 0.42, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 14
-text = ""
-horizontal_alignment = 1
-autowrap_mode = 3
-visible = false
-
 [node name="Spacer" type="Control" parent="PanelCenter/ModalPanel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3

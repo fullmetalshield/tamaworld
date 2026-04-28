@@ -4,6 +4,42 @@
 
 ---
 
+## 2026-04-28
+
+### NPC 풀 캐릭터화 + 인연 상세 모달
+- 인연 상대를 단순 이름 카운터에서 **풀 캐릭터(NPC 펫)**으로 격상. NPC는 주인공과 동일한 스키마(stats / job / lifespan / 외형 등)를 가지며, EventManager `_tick_actions`가 이미 모든 펫을 자동 픽 처리하므로 자동으로 자기 행동을 함. 유저 컨트롤은 불가.
+- [scripts/PetStore.gd](../scripts/PetStore.gd):
+  - 펫 스키마에 `kind`(`"family"` / `"npc"`) + `bond_cooldowns: Dictionary` 추가, 마이그레이션으로 backfill.
+  - `create_npc(name)` / `find_or_create_npc_by_name(name)` 신규 — NPC는 청년기~중년기(0.25~0.65) 랜덤 시점에 태어난 것으로 생성, 랜덤 직업 부여.
+  - 양방향 인연 헬퍼 `add_bond(a_id, b_id, amount)` — 양쪽 펫의 `bonds[other_id]`를 동시에 증가.
+  - 레거시 인연 마이그레이션: 옛 저장의 `bonds: {name: count}`를 스캔, uid 형식이 아닌 키는 NPC를 새로 만들어 id로 치환하고 NPC 측에도 동일 호감도 기록.
+- [scripts/Actions.gd](../scripts/Actions.gd) `_form_club_bond` → `Clubs.random_member_name`으로 NPC를 lookup-or-create 후 `PetStore.add_bond`로 양방향 +1. 또한 `_complete`의 `money_reward`는 `kind == "family"`일 때만 가족 자금으로 입금(NPC 활동은 가족 자금에 영향 없음).
+- [scripts/EventManager.gd](../scripts/EventManager.gd) `_tick_economy`도 `kind != "family"` 펫은 직장 수입/학교 비용 계산에서 제외.
+- [scripts/Genetics.gd](../scripts/Genetics.gd) 자식 펫에 `kind: "family"`, `bond_cooldowns: {}` 추가.
+- [scripts/BondModal.gd](../scripts/BondModal.gd) 단순 라벨 행 → 라운드 핑크 테두리 **버튼**으로 변경, 클릭 시 `bond_selected(viewer_id, npc_id)` 신호 발행. 사망 NPC는 회색 + "(사망)" 표시.
+- 신규 [scenes/BondDetailModal.tscn](../scenes/BondDetailModal.tscn) + [scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd):
+  - 헤더(이름 + 성별 마크), SubViewport(115×118)에 NPC 캐릭터, 나이/단계/수명, 직업, **내 호감도 ♥ X / 상대 호감도 ♥ Y** 라벨, 6종 능력치 그리드, "할 수 있는 항목" 섹션.
+  - 인터랙션 두 개: **함께 시간 보내기**(♥ +1, 120 게임분 쿨다운 — `viewer["bond_cooldowns"][npc_id]`로 추적) / **선물 주기**(50원 차감, ♥ +2). 사망 NPC는 둘 다 비활성화.
+- [scripts/FamilyTree.gd](../scripts/FamilyTree.gd) `bond_modal.bond_selected` → `bond_detail_modal.show_for(viewer_id, npc_id)` 라우팅. [scenes/FamilyTree.tscn](../scenes/FamilyTree.tscn)에 BondDetailModal 인스턴스 추가.
+
+### 인연을 라디얼 메뉴 항목으로 분리
+- [scripts/StatModal.gd](../scripts/StatModal.gd) / [scenes/StatModal.tscn](../scenes/StatModal.tscn)에서 `BondsLabel` 및 `_apply_bonds_label` 제거. 상태 모달은 이제 능력치 + 직업 + 동호회까지만.
+- 신규 [scenes/BondModal.tscn](../scenes/BondModal.tscn) + [scripts/BondModal.gd](../scripts/BondModal.gd) — 풀스크린 반투명 backdrop + 360×320 라운드 패널. "{이름}의 인연" 헤더 + 스크롤 가능한 인연 리스트(이름 ↔ ×횟수, 카운트 내림차순) + 확인 버튼. 상위 5명 컷오프 없이 전부 표시.
+- [scripts/FamilyTree.gd](../scripts/FamilyTree.gd) `_open_radial_for_pet`이 `pet["bonds"]`가 비어있지 않을 때만 `{"id": "bond", "label": "인연"}` 추가. `_on_radial_item_selected`에 `"bond"` → `bond_modal.show_for(pet)` 분기. [scenes/FamilyTree.tscn](../scenes/FamilyTree.tscn)에 BondModal 인스턴스 추가.
+- [translations/strings.json](../translations/strings.json)에 `RADIAL_BOND`(`인연` / `BOND`) 추가.
+- [scripts/RadialMenu.gd](../scripts/RadialMenu.gd)는 이미 `angle = -PI/2 + TAU*i/n`으로 정원 배치라 항목 3개일 때 자동으로 위쪽 꼭지점 정삼각형(−90°, 30°, 150°). 추가 변경 불필요.
+
+## 2026-04-27
+
+### 카탈로그 웹 에디터 (Phase 2)
+- 신규 [tools/catalog-editor/](../tools/catalog-editor/) — Vite + React + TypeScript 기반 로컬 에디터. `npm install && npm run dev`로 띄우면 브라우저에서 `data/*.json`을 직접 편집·저장.
+- Vite 미들웨어([tools/catalog-editor/vite.config.ts](../tools/catalog-editor/vite.config.ts))가 `/api/catalog/{actions|clubs|schools|jobs}` GET/PUT를 처리해 별도 백엔드 없이 디스크 파일을 읽고 prettified JSON으로 덮어씀.
+- 탭 5개: 행동/동호회/학교/직업 + 단계 미리보기. 좌측 리스트(색상 스와치 + 라벨 + id) → 우측 인스펙터(타입별 폼: phase 칩 토글, 색상 피커, 스탯 효과 6종 등).
+- 항목 추가/삭제 가능. 인스펙터의 sets_school·opens_picker 같은 cross-ref 필드는 다른 카탈로그를 참조하는 셀렉트로 노출.
+- 항상 떠있는 검증 바([tools/catalog-editor/src/validation.ts](../tools/catalog-editor/src/validation.ts))가 미지의 phase id, 잘못된 색상 hex, dangling sets_school, starting_job 누락 등을 실시간 표시.
+- 단계 미리보기 탭은 단계 카드 그리드 — 각 단계에서 어떤 행동이 가능한지 + 청년기·중년기·장년기에는 동호회 활동 라벨도 함께 보여 트리 분기 직관 확보.
+- 명시적 "저장" 버튼만 있고 자동 저장 없음 (실수 방지). 저장 후 게임 재실행 시 [scripts/CatalogLoader.gd](../scripts/CatalogLoader.gd)가 새 데이터 적용.
+
 ## 2026-04-26
 
 ### 카탈로그 데이터 분리 + 로더 + 검증기 (Phase 1: 액션 트리 에디터의 토대)

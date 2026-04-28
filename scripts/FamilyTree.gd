@@ -24,6 +24,8 @@ var _slot_indicators: Dictionary = {}
 @onready var act_modal: Control = %ActModal
 @onready var club_picker_modal: Control = %ClubPickerModal
 @onready var child_birth_modal: Control = %ChildBirthModal
+@onready var bond_modal: Control = %BondModal
+@onready var bond_detail_modal: Control = %BondDetailModal
 
 var _radial_menu: RadialMenu
 var _radial_pet_id: String = ""
@@ -67,6 +69,7 @@ func _ready() -> void:
 	act_modal.picker_requested.connect(_on_picker_requested)
 	club_picker_modal.club_chosen.connect(_on_club_chosen)
 	club_picker_modal.cancelled.connect(_on_picker_cancelled)
+	bond_modal.bond_selected.connect(_on_bond_selected)
 	visibility_changed.connect(_on_visibility_changed)
 
 	stage_viewport.gui_input.connect(_on_stage_input)
@@ -197,6 +200,9 @@ func _open_radial_for_pet(pet: Dictionary, slot_index: int) -> void:
 	var items: Array = [{"id": "stat", "label": tr("RADIAL_STAT")}]
 	if is_protagonist and alive:
 		items.append({"id": "act", "label": tr("RADIAL_ACT")})
+	var bonds: Dictionary = pet.get("bonds", {})
+	if not bonds.is_empty():
+		items.append({"id": "bond", "label": tr("RADIAL_BOND")})
 	_elevate_slot(slot_index)
 	# Use the full transform chain so zoom/pan are honoured — `get_global_rect`
 	# alone returns the unscaled local size, which would mis-centre the menu
@@ -230,6 +236,9 @@ func _on_club_chosen(club_id: String) -> void:
 	# Reopen ActModal so the player sees the new club-specific activity.
 	act_modal.show_for(pet)
 
+func _on_bond_selected(viewer_id: String, npc_id: String) -> void:
+	bond_detail_modal.show_for(viewer_id, npc_id)
+
 func _on_picker_cancelled() -> void:
 	# Reopen the action list so the player can pick something else.
 	var pet := PetStore.find_by_id(_picker_pet_id)
@@ -249,6 +258,8 @@ func _on_radial_item_selected(id: String) -> void:
 			stat_modal.show_for(pet)
 		"act":
 			act_modal.show_for(pet)
+		"bond":
+			bond_modal.show_for(pet)
 
 # --- per-slot action indicator -----------------------------------------
 
