@@ -19,6 +19,14 @@ const HANGOUT_COOLDOWN_MIN := 120  # 2 game-hours between hangouts
 const HANGOUT_BOND_DELTA := 1
 const GIFT_COST := 50
 const GIFT_BOND_DELTA := 2
+const DATE_COOLDOWN_MIN := 3  # 3 game-minutes, applied whether the date succeeds or not
+const DATE_BOND_DELTA := 3
+# Probability the partner accepts a date proposal: 30% baseline plus 3% per
+# point of accumulated mutual bond, capped at 95%. This lets the player nudge
+# the odds upward by hangout / gift first, but never drops to a flat refusal.
+const DATE_BASE_CHANCE := 0.30
+const DATE_BOND_CHANCE_GAIN := 0.03
+const DATE_MAX_CHANCE := 0.95
 
 @onready var npc_tama: Tamagotchi = %NpcTama
 @onready var npc_name_label: Label = %NpcName
@@ -30,6 +38,7 @@ const GIFT_BOND_DELTA := 2
 @onready var stats_grid: GridContainer = %StatsGrid
 @onready var hangout_button: Button = %HangoutButton
 @onready var gift_button: Button = %GiftButton
+@onready var date_button: Button = %DateButton
 @onready var status_label: Label = %StatusLabel
 @onready var confirm_button: Button = %ConfirmButton
 
@@ -44,8 +53,23 @@ func _ready() -> void:
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	hangout_button.pressed.connect(_on_hangout_pressed)
 	gift_button.pressed.connect(_on_gift_pressed)
+	date_button.pressed.connect(_on_date_pressed)
 	visible = false
 	_build_stats_grid()
+
+func _process(_delta: float) -> void:
+	# Tick the cooldown labels live while the modal is open. Game-minutes
+	# advance with sub-second precision (GameClock is a float), so once-per-
+	# frame is fine; the integer ceil in the formatter gives a stable second-
+	# by-second readout.
+	if not visible or _viewer_id == "":
+		return
+	var viewer := PetStore.find_by_id(_viewer_id)
+	if viewer.is_empty():
+		return
+	var npc := PetStore.find_by_id(_npc_id)
+	var alive: bool = not npc.is_empty() and Stats.is_alive(npc, int(GameClock._total_game_minutes))
+	_refresh_buttons(viewer, alive)
 
 func _build_stats_grid() -> void:
 	if _stats_built:
@@ -130,8 +154,8 @@ func _render() -> void:
 
 	var mine: int = int((viewer.get("bonds", {}) as Dictionary).get(_npc_id, 0))
 	var theirs: int = int((npc.get("bonds", {}) as Dictionary).get(_viewer_id, 0))
-	affection_mine.text = "내 호감도 ♥ %d" % mine
-	affection_theirs.text = "%s의 호감도 ♥ %d" % [String(npc.get("given_name", "")), theirs]
+	affection_mine.text = "내 호감도 %d" % mine
+	affection_theirs.text = "상대의 호감도 %d" % theirs
 
 	_refresh_buttons(viewer, alive)
 
@@ -141,25 +165,64 @@ func _refresh_buttons(viewer: Dictionary, npc_alive: bool) -> void:
 		hangout_button.text = "함께 시간 보내기 (불가)"
 		gift_button.disabled = true
 		gift_button.text = "선물 주기 (불가)"
+		date_button.disabled = true
+		date_button.text = "같이 데이트하기 (불가)"
 		return
-	var cd_remaining: int = _hangout_cooldown_remaining(viewer)
-	if cd_remaining > 0:
+	var hangout_cd: float = _cooldown_remaining(viewer, "hangout")
+	if hangout_cd > 0.0:
 		hangout_button.disabled = true
-		hangout_button.text = "함께 시간 보내기 (%d분 후)" % cd_remaining
+		hangout_button.text = "함께 시간 보내기 (%s)" % _format_wait(hangout_cd)
 	else:
 		hangout_button.disabled = false
-		hangout_button.text = "함께 시간 보내기 (♥ +%d)" % HANGOUT_BOND_DELTA
+		hangout_button.text = "함께 시간 보내기 (호감도 +%d)" % HANGOUT_BOND_DELTA
 	if Family.money() < GIFT_COST:
 		gift_button.disabled = true
 		gift_button.text = "선물 주기 (%d원 부족)" % GIFT_COST
 	else:
 		gift_button.disabled = false
-		gift_button.text = "선물 주기 (-%d원, ♥ +%d)" % [GIFT_COST, GIFT_BOND_DELTA]
+		gift_button.text = "선물 주기 (-%d원, 호감도 +%d)" % [GIFT_COST, GIFT_BOND_DELTA]
+	var date_cd: float = _cooldown_remaining(viewer, "date")
+	if date_cd > 0.0:
+		date_button.disabled = true
+		date_button.text = "같이 데이트하기 (%s)" % _format_wait(date_cd)
+	elif Actions.is_busy(viewer):
+		date_button.disabled = true
+		date_button.text = "같이 데이트하기 (내가 다른 일 중)"
+	else:
+		date_button.disabled = false
+		var chance: float = _date_chance(viewer)
+		date_button.text = "같이 데이트하기 (성공률 %d%%)" % int(round(chance * 100.0))
 
-func _hangout_cooldown_remaining(viewer: Dictionary) -> int:
+# Game-minutes (== real-seconds at the 1:1 GameClock rate) → user-facing
+# countdown like "3초 후" / "1분 30초 후" / "2분 후".
+func _format_wait(game_min_remaining: float) -> String:
+	var total_sec: int = int(ceil(game_min_remaining))
+	if total_sec < 60:
+		return "%d초 후" % max(1, total_sec)
+	var minutes: int = total_sec / 60
+	var seconds: int = total_sec % 60
+	if seconds == 0:
+		return "%d분 후" % minutes
+	return "%d분 %d초 후" % [minutes, seconds]
+
+func _date_chance(viewer: Dictionary) -> float:
+	# Either side's bond is the same in current rules (PetStore.add_bond is
+	# always mutual), so reading the viewer side is sufficient.
+	var bond: int = int((viewer.get("bonds", {}) as Dictionary).get(_npc_id, 0))
+	return clampf(DATE_BASE_CHANCE + float(bond) * DATE_BOND_CHANCE_GAIN, DATE_BASE_CHANCE, DATE_MAX_CHANCE)
+
+func _cooldown_key(action: String) -> String:
+	return "%s::%s" % [_npc_id, action]
+
+func _cooldown_remaining(viewer: Dictionary, action: String) -> float:
 	var cd: Dictionary = viewer.get("bond_cooldowns", {})
-	var until: int = int(cd.get(_npc_id, 0))
-	return max(0, until - int(GameClock._total_game_minutes))
+	var until: int = int(cd.get(_cooldown_key(action), 0))
+	return max(0.0, float(until) - float(GameClock._total_game_minutes))
+
+func _stamp_cooldown(viewer: Dictionary, action: String, minutes: int) -> void:
+	var cd: Dictionary = viewer.get("bond_cooldowns", {})
+	cd[_cooldown_key(action)] = int(GameClock._total_game_minutes) + minutes
+	viewer["bond_cooldowns"] = cd
 
 func _apply_gender_mark(gender: String) -> void:
 	match gender:
@@ -178,16 +241,14 @@ func _on_hangout_pressed() -> void:
 	var viewer := PetStore.find_by_id(_viewer_id)
 	if viewer.is_empty():
 		return
-	if _hangout_cooldown_remaining(viewer) > 0:
+	if _cooldown_remaining(viewer, "hangout") > 0.0:
 		return
 	PetStore.add_bond(_viewer_id, _npc_id, HANGOUT_BOND_DELTA)
 	# Stamp cooldown so the player can't immediately click again. We store on
 	# the viewer side only — the NPC isn't user-driven so they don't need it.
-	var cd: Dictionary = viewer.get("bond_cooldowns", {})
-	cd[_npc_id] = int(GameClock._total_game_minutes) + HANGOUT_COOLDOWN_MIN
-	viewer["bond_cooldowns"] = cd
+	_stamp_cooldown(viewer, "hangout", HANGOUT_COOLDOWN_MIN)
 	PetStore.persist()
-	status_label.text = "함께 즐거운 시간을 보냈습니다. ♥ +%d" % HANGOUT_BOND_DELTA
+	status_label.text = "함께 즐거운 시간을 보냈습니다. 호감도 +%d" % HANGOUT_BOND_DELTA
 	_render()
 
 func _on_gift_pressed() -> void:
@@ -195,7 +256,29 @@ func _on_gift_pressed() -> void:
 		return
 	Family.add_money(-GIFT_COST)
 	PetStore.add_bond(_viewer_id, _npc_id, GIFT_BOND_DELTA)
-	status_label.text = "선물을 전달했습니다. ♥ +%d" % GIFT_BOND_DELTA
+	status_label.text = "선물을 전달했습니다. 호감도 +%d" % GIFT_BOND_DELTA
+	_render()
+
+func _on_date_pressed() -> void:
+	var viewer := PetStore.find_by_id(_viewer_id)
+	var npc := PetStore.find_by_id(_npc_id)
+	if viewer.is_empty() or npc.is_empty():
+		return
+	if _cooldown_remaining(viewer, "date") > 0.0:
+		return
+	if Actions.is_busy(viewer):
+		return
+	# Cooldown lands the moment the player commits, regardless of how the
+	# proposal turns out — the partner needs breathing room either way.
+	_stamp_cooldown(viewer, "date", DATE_COOLDOWN_MIN)
+	var chance := _date_chance(viewer)
+	if randf() < chance:
+		PetStore.add_bond(_viewer_id, _npc_id, DATE_BOND_DELTA)
+		Actions.start_date(viewer, npc)
+		status_label.text = "데이트 약속이 잡혔습니다! 호감도 +%d" % DATE_BOND_DELTA
+	else:
+		PetStore.persist()
+		status_label.text = "%s에게 거절당했습니다." % npc.get("given_name", "")
 	_render()
 
 func _on_confirm_pressed() -> void:

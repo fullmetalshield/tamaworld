@@ -68,6 +68,23 @@ static func _migrate_pets() -> void:
 		if not pet.has("bond_cooldowns"):
 			pet["bond_cooldowns"] = {}
 			changed = true
+		else:
+			# Legacy bond_cooldowns were `{npc_id: until_min}` (hangout-only).
+			# New format: `{"{npc_id}::{action}": until_min}` so each
+			# interaction (hangout / date / ...) tracks separately.
+			var cd: Dictionary = pet["bond_cooldowns"]
+			var promoted: Dictionary = {}
+			var did_promote := false
+			for k in cd.keys():
+				var key := String(k)
+				if "::" in key:
+					promoted[key] = int(cd[k])
+				else:
+					promoted[key + "::hangout"] = int(cd[k])
+					did_promote = true
+			if did_promote:
+				pet["bond_cooldowns"] = promoted
+				changed = true
 		if not pet.has("kind"):
 			# Inferred from family relations: anyone connected by spouse/parent
 			# is "family"; standalone pets from earlier sessions are "npc".

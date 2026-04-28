@@ -30,6 +30,10 @@ static func available_ids(pet: Dictionary, now_minutes: int) -> Array:
 	var ids: Array = []
 	for id in CATALOG:
 		var entry: Dictionary = CATALOG[id]
+		# Triggered-only actions are started by special UI flows (e.g. date
+		# from BondDetailModal) and never appear in the generic action list.
+		if entry.get("triggered_only", false):
+			continue
 		var allowed: Array = entry.get("phases", [])
 		if not allowed.is_empty() and not (phase_id in allowed):
 			continue
@@ -78,11 +82,64 @@ static func start(pet: Dictionary, action_id: String) -> bool:
 	if not CATALOG.has(action_id):
 		return false
 	var action: Dictionary = CATALOG[action_id]
+	if not _can_afford(pet, action):
+		return false
+	_deduct_cost(pet, action)
 	pet["active_action"] = {
 		"id": action_id,
 		"started_at_minutes": float(GameClock._total_game_minutes),
 		"duration_minutes": int(action.get("duration", 60)),
 	}
+	PetStore.persist()
+	return true
+
+# Up-front money_cost gate. Family pets pull from the shared treasury; NPCs
+# live their own lives without touching it (they ignore cost). Returns true
+# when the action can be started right now.
+static func _can_afford(pet: Dictionary, action: Dictionary) -> bool:
+	var cost: int = int(action.get("money_cost", 0))
+	if cost <= 0:
+		return true
+	if String(pet.get("kind", "family")) != "family":
+		return true
+	return Family.money() >= cost
+
+static func _deduct_cost(pet: Dictionary, action: Dictionary) -> void:
+	var cost: int = int(action.get("money_cost", 0))
+	if cost <= 0:
+		return
+	if String(pet.get("kind", "family")) != "family":
+		return
+	Family.add_money(-cost)
+
+# Two-pet date action — both viewer and partner go busy for the same window
+# so neither can start something else while it runs. The catalog entry is
+# `triggered_only`, so it never auto-picks; only BondDetailModal calls this.
+# The partner's prior auto-picked action (rest/play/etc.) is preempted —
+# accepting the date means dropping whatever they were doing. The viewer
+# still has to be free, since this is initiated by the player.
+static func start_date(viewer: Dictionary, partner: Dictionary) -> bool:
+	if is_busy(viewer):
+		return false
+	if not CATALOG.has("date"):
+		return false
+	var entry: Dictionary = CATALOG["date"]
+	var dur: int = int(entry.get("duration", 1))
+	var now: float = float(GameClock._total_game_minutes)
+	var viewer_block := {
+		"id": "date",
+		"started_at_minutes": now,
+		"duration_minutes": dur,
+		"partner_id": partner.get("id", ""),
+	}
+	var partner_block := {
+		"id": "date",
+		"started_at_minutes": now,
+		"duration_minutes": dur,
+		"partner_id": viewer.get("id", ""),
+	}
+	viewer["active_action"] = viewer_block
+	partner["active_action"] = partner_block
 	PetStore.persist()
 	return true
 
@@ -96,6 +153,9 @@ static func start_club_activity(pet: Dictionary, club_id: String) -> bool:
 	if not CATALOG.has("club_activity"):
 		return false
 	var action: Dictionary = CATALOG["club_activity"]
+	if not _can_afford(pet, action):
+		return false
+	_deduct_cost(pet, action)
 	pet["active_action"] = {
 		"id": "club_activity",
 		"club_id": club_id,

@@ -57,7 +57,7 @@ func _render(pet: Dictionary) -> void:
 
 func _make_button(entry: Dictionary) -> Button:
 	var btn := Button.new()
-	btn.text = "  %s   ×%d%s  " % [entry["name"], entry["count"], "" if entry["alive"] else " (사망)"]
+	btn.text = "  %s   ♥%d%s  " % [entry["name"], entry["count"], "" if entry["alive"] else " (사망)"]
 	btn.add_theme_font_override("font", FONT)
 	btn.add_theme_font_size_override("font_size", 18)
 	btn.add_theme_color_override("font_color", NAME_COLOR if entry["alive"] else DEAD_COLOR)

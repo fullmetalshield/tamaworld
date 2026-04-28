@@ -4,6 +4,80 @@
 
 ---
 
+## 2026-04-29
+
+### 동호회 활동 비용 (money_cost 카탈로그 필드)
+- 동호회 활동에 일회성 비용을 붙여 인연 형성에 자원 부담을 추가. [data/actions.json](../data/actions.json) `club_activity`에 `money_cost: 1000` 필드 추가(가족 수입 페이스 대비 의미 있는 부담).
+- 신규 카탈로그 필드 `money_cost`는 일반화돼서 어떤 액션에도 적용 가능. [scripts/Actions.gd](../scripts/Actions.gd):
+  - `_can_afford(pet, action)` / `_deduct_cost(pet, action)` 헬퍼 — 가족 펫만 가족 자금에서 차감(NPC는 비용 없이 활동), 잔액 부족이면 시작 거부.
+  - `start` / `start_club_activity` 양쪽에서 시작 직전 호출. 시작과 동시에 즉시 차감(상위 활동의 한 사이클 단위로 비용을 지불하는 모델).
+- [scripts/ActModal.gd](../scripts/ActModal.gd):
+  - `_meta_text`가 `money_cost`도 인식해 라벨에 "-N원" 포함, `money_reward`와 함께 있을 경우 둘 다 표기 가능 (`90분 · -20원 · +0원` 등 — reward=0이면 생략).
+  - 잔액 부족 시 row 버튼 비활성화 + 메타 라벨 "N원 부족". 진행 중인 row는 잔액 부족이어도 disabled 처리에서 제외(이미 시작된 것은 그대로 진행).
+
+### 인연 인터랙션 쿨다운 표시 실시간화
+- BondDetailModal의 hangout / date 쿨다운이 그동안 게임분 단위(`120분 후`, `3분 후`)로 표시돼 실제 대기 시간(=실시간 초)과 단위가 어긋나던 문제. GameClock이 1게임분=1실초로 돌기 때문에 유저가 보는 단위로 환산해 표기.
+- [scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd):
+  - `_cooldown_remaining`을 int → float 반환으로 변경(GameClock이 float이라 sub-second 정밀도 확보).
+  - 신규 헬퍼 `_format_wait(game_min: float)` — 60초 미만은 `"3초 후"`, 1분 이상이면 `"1분 30초 후"` / `"2분 후"`. ceil 적용으로 0초 직전까지 1초로 표시.
+  - 쿨다운 라벨이 매 프레임 갱신되도록 `_process(_delta)` 추가 — 모달이 visible일 때만 viewer/npc lookup 후 `_refresh_buttons` 재실행. 버튼 텍스트/disabled만 다시 쓰는 가벼운 패스라 60Hz로 돌려도 부담 없음.
+- 결과: hangout 후 버튼 라벨이 `"함께 시간 보내기 (1분 59초 후)"` → ... → `"(3초 후)"` → ... 로 매 초 줄어들고, 데이트는 `(3초 후)` → `(1초 후)` → 활성화로 자연스럽게 카운트다운.
+
+### 데이트 쿨다운 60→3분
+- [scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd) `DATE_COOLDOWN_MIN` 60 → 3. 1게임시간이 너무 길어 데이트 시도 텀이 답답했음. 3게임분(=3실초)이면 거절 후 즉시 재시도까진 못해도 곧 다시 도전 가능.
+
+### 데이트 NPC busy 체크 제거 (preempt)
+- 데이트 버튼이 NPC가 거의 항상 자동 행동(rest 60분 / play 120분 / study 180분 등) 중이라 "다른 일 중"으로 잠겨 있던 문제. 데이트 신청은 NPC 입장에선 하던 일 중단 후 수락이 자연스러우므로, 성공 시 NPC의 현재 `active_action`을 그대로 덮어쓰도록 변경.
+- [scripts/Actions.gd](../scripts/Actions.gd) `start_date`에서 partner busy 체크 제거 — viewer(주인공) busy일 때만 거부. NPC는 무조건 데이트로 전환.
+- [scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd) `_refresh_buttons` / `_on_date_pressed`도 NPC busy 검사 제거. 버튼 라벨은 viewer 자신이 바쁠 때 "내가 다른 일 중"으로 명확히 표기.
+
+### 같이 데이트하기 (확률 + 양방향 점유 액션)
+- 신규 인터랙션 "같이 데이트하기"를 BondDetailModal에 추가. 클릭 시 확률 롤로 성패 결정, 1게임분 동안 양쪽 캐릭터를 점유. 쿨다운 1게임시간(60분)은 결과와 무관하게 적용.
+- [data/actions.json](../data/actions.json)에 `date` 엔트리 추가 — `duration: 1`, `effects: {}`, `triggered_only: true`. 새 플래그 `triggered_only`는 일반 행동 모달에는 노출하지 않고 외부(BondDetailModal)에서만 시작하는 액션을 표시. [scripts/Actions.gd](../scripts/Actions.gd) `available_ids`가 이 플래그를 필터링하므로 ActModal/auto-pick 양쪽에서 자동으로 제외됨. NPC도 데이트를 자율 시작하지 않음.
+- [scripts/Actions.gd](../scripts/Actions.gd) `start_date(viewer, partner)` 신설 — 둘 다 한가할 때만 `active_action`을 동시에 설정(`partner_id` 보관). 1분 후 각자의 `tick()`이 독립적으로 `_complete`해서 active_action 해제. 효과 없는 빈 액션이라 _complete의 부작용은 무해.
+- [scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd):
+  - 쿨다운 키를 `npc_id` → 복합 키 `"{npc_id}::{action}"`으로 리팩터. `_cooldown_key/_cooldown_remaining/_stamp_cooldown` 헬퍼로 hangout/date 양쪽이 독립 추적.
+  - 확률 공식 `_date_chance`: `0.30 + bond * 0.03`, 최대 0.95. hangout/gift로 호감도를 쌓으면 데이트 성공률이 자연스럽게 올라감.
+  - `_on_date_pressed`: 클릭 직후 60분 쿨다운 stamp → 확률 롤 → 성공 시 mutual ♥+3 + `Actions.start_date` + 상태 라벨 "데이트 약속이 잡혔습니다!"; 실패 시 "X에게 거절당했습니다." 메시지만.
+  - `_refresh_buttons`가 데이트 버튼의 (1) 쿨다운 (2) 양쪽 중 한쪽이라도 다른 일 중 (3) 정상 — 세 상태에 따른 라벨/disabled 분기. 정상 상태에서는 "성공률 N%"를 노출해 의사결정 정보 제공.
+- [scripts/PetStore.gd](../scripts/PetStore.gd) `bond_cooldowns` 마이그레이션 — 기존 `{npc_id: int}` 형식의 키를 `"{npc_id}::hangout"`로 자동 승격. 신규 인터랙션이 추가돼도 같은 dict에 깔끔히 추가 가능.
+- [scenes/BondDetailModal.tscn](../scenes/BondDetailModal.tscn) `행동` 탭에 `DateButton` 추가, 산뜻한 핫핑크 톤 StyleBox(`#FFC7DA` normal / `#F594B8` hover, `#EB7399` 테두리). hover 시 글씨 흰색.
+- [translations/strings.json](../translations/strings.json)에 `ACTION_DATE` / `ACTION_DATE_PROGRESS` 추가.
+
+### BondModal 카운트 표기 ×→♥
+- [scripts/BondModal.gd](../scripts/BondModal.gd)의 인연 버튼 라벨 `"{이름} ×N"` → `"{이름} ♥N"`. 같은 값이 BondDetailModal에서 "내 호감도 N"으로 보이므로 ×는 횟수 잔재 표기였음 — 이제 양쪽 모두 호감도 의미로 일관.
+
+### BondDetailModal 다듬기
+- ModalPanel 최소 높이 440 → 520 원복(잘리지 않으니 굳이 줄일 필요 없음).
+- 능력치는 데이터에는 남기되 UI에서는 숨김 — 상태 탭의 `StatsGrid`와 위 `HSeparator`를 `visible = false`. `_render`는 그대로 값을 채우므로 추후 재노출만 하면 됨.
+- 호감도 표시 가로 → **세로** 배치. `AffectionRow`(HBox) → `AffectionColumn`(VBox, separation=4), 라벨 horizontal_alignment=1. 텍스트도 정리: "내 호감도 ♥ N" / "{이름}의 호감도 ♥ N" → **"내 호감도 N"** / **"상대의 호감도 N"** ([scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd)).
+- 행동 탭이 탭 바와 너무 붙어있던 문제: 탭 VBox 맨 위에 12px `TopSpacer`(Control) 추가, `separation` 10 → 14.
+- 행동 버튼 색상을 회색 디폴트 → 산뜻한 톤으로:
+  - **함께 시간 보내기**: 라이트 스카이블루 normal `#C7E0F5` / hover `#9EC7EB`, 짙은 블루 테두리.
+  - **선물 주기**: 살구색 normal `#FFDBBD` / hover `#F5BD8C`, 따뜻한 갈색 테두리.
+  - 둘 다 corner_radius 14, hover 시 폰트 흰색. 비활성화 상태는 공용 회색 `StyleBox_btn_disabled`로.
+- 동적 라벨/상태 텍스트의 ♥ 기호도 "호감도"로 정리해 표기 일관성 확보.
+
+### BondDetailModal 탭 구조화
+- 인연 상세 모달 내용이 길어 작은 창에서 화면이 잘리던 문제. [scenes/BondDetailModal.tscn](../scenes/BondDetailModal.tscn) 가운데 영역(나이/직업/호감도/스탯 + 행동 버튼/상태 라벨)을 `TabContainer`로 감싸 **상태 / 행동** 두 탭으로 분리.
+  - **상태 탭**: AgeLabel + JobLabel + AffectionRow(내/상대 호감도) + HSeparator + StatsGrid 6종.
+  - **행동 탭**: HangoutButton + GiftButton + StatusLabel.
+- 헤더(이름/성별 마크) + 캐릭터 SubViewport + 확인 버튼은 탭 밖에 유지 — 탭을 전환해도 NPC 외형과 식별 정보는 항상 보임.
+- ModalPanel 최소 높이 520 → 440으로 축소. TabContainer `custom_minimum_size = (0, 240)` + `size_flags_vertical = 3`로 가용 영역 채움. neodgm 폰트가 탭 제목에도 적용되도록 `theme_override_fonts/font` 지정.
+- 노드 이름을 "상태" / "행동"으로 직접 두면 TabContainer가 그대로 탭 라벨로 사용. 모든 unique_name(`%NpcName`, `%StatsGrid`, `%HangoutButton` 등)은 새 경로에서도 그대로 resolve되므로 [scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd)는 변경 없음.
+
+### 카탈로그 에디터: 트리 뷰 + 드래그 편집
+- [tools/catalog-editor/](../tools/catalog-editor/)에 `@xyflow/react` 추가, 새 "트리 뷰" 탭. 단계(왼쪽) → 행동(가운데) → 학교/picker/동호회(오른쪽)의 4열 레이아웃으로 노드/엣지 시각화.
+- 신규 [tools/catalog-editor/src/lib/buildGraph.ts](../tools/catalog-editor/src/lib/buildGraph.ts) — 카탈로그 3종을 React Flow `Node[] / Edge[]`로 변환. 행동은 첫 가용 단계 줄에 stack-positioning, 같은 단계에 여럿이면 64px씩 내려쌓음.
+- 신규 [tools/catalog-editor/src/components/TreeNodes.tsx](../tools/catalog-editor/src/components/TreeNodes.tsx) — `PhaseNode` / `ActionNode`(색상 적용) / `SchoolNode` / `ClubNode` / `PickerNode`(점선 테두리). 각 노드는 좌·우 핸들로 드래그 연결 받음.
+- 신규 [tools/catalog-editor/src/lib/applyConnection.ts](../tools/catalog-editor/src/lib/applyConnection.ts) — 엣지 생성/삭제를 카탈로그 변이로 번역:
+  - Phase ↔ Action (양방향 드래그) → `action.phases` 추가/제거
+  - Action → School → `action.sets_school` 설정/해제
+  - Action → Picker → `action.opens_picker` 설정/해제
+  - Picker → Club은 의도적으로 편집 불가(`deletable: false` + 점선 표시).
+- 신규 [tools/catalog-editor/src/components/TreeView.tsx](../tools/catalog-editor/src/components/TreeView.tsx) — React Flow 통합. `onConnect`/`onEdgesDelete`로 변이 라우팅, 행동 노드 클릭 시 인스펙터 탭으로 이동하면서 해당 항목 자동 선택. MiniMap + Controls + Background.
+- 결과: 새 행동을 추가한 뒤 트리 뷰에서 단계 노드로 드래그하면 `phases` 배열에 즉시 반영, 엣지를 클릭→Backspace로 지우면 빠짐. 저장 버튼은 평소처럼 dirty 상태에 따라 활성화.
+
 ## 2026-04-28
 
 ### NPC 풀 캐릭터화 + 인연 상세 모달

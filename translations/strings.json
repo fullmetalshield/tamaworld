@@ -12,6 +12,8 @@
   "ACTION_JOIN_CLUB": {"ko": "동호회 활동하기", "en": "Join a Club"},
   "ACTION_CLUB_ACTIVITY": {"ko": "동호회 활동", "en": "Club Activity"},
   "ACTION_CLUB_ACTIVITY_PROGRESS": {"ko": "활동 중", "en": "At Club"},
+  "ACTION_DATE": {"ko": "같이 데이트하기", "en": "Date"},
+  "ACTION_DATE_PROGRESS": {"ko": "데이트 중", "en": "On a Date"},
   "ACTION_DURATION_SUFFIX": {"ko": "(%d분)", "en": "(%d min)"},
   "MODAL_ACTIONS_HEADING": {"ko": "행동", "en": "Actions"},
   "HUD_MONEY": {"ko": "%d원", "en": "$%d"},

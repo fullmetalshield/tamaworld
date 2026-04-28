@@ -203,16 +203,20 @@ func _meta_text(action: Dictionary) -> String:
 		return "선택지"
 	var sets_school: String = String(action.get("sets_school", ""))
 	if sets_school != "":
-		var cost: int = Schools.cost_per_second(sets_school)
-		if cost > 0:
-			return "초당 -%d원" % cost
+		var school_cost: int = Schools.cost_per_second(sets_school)
+		if school_cost > 0:
+			return "초당 -%d원" % school_cost
 		return "무료"
 	var dur_game_min: int = int(action.get("duration", 0))
 	var display_min: int = max(1, int(round(float(dur_game_min) / 60.0)))
-	var money: int = int(action.get("money_reward", 0))
-	if money > 0:
-		return "%d분 · +%d원" % [display_min, money]
-	return "%d분" % display_min
+	var money_reward: int = int(action.get("money_reward", 0))
+	var money_cost: int = int(action.get("money_cost", 0))
+	var pieces: Array = ["%d분" % display_min]
+	if money_cost > 0:
+		pieces.append("-%d원" % money_cost)
+	if money_reward > 0:
+		pieces.append("+%d원" % money_reward)
+	return " · ".join(pieces)
 
 func _format_cooldown(remaining_game_min: int) -> String:
 	if remaining_game_min <= 0:
@@ -257,8 +261,10 @@ func _refresh_action_states(pet: Dictionary) -> void:
 		if int(template.get("cooldown_minutes", 0)) > 0:
 			cd_remaining = Actions.cooldown_remaining_minutes(pet, String(row_data.action_id))
 			on_cooldown = cd_remaining > 0
+		var money_cost: int = int(template.get("money_cost", 0))
+		var unaffordable: bool = money_cost > 0 and Family.money() < money_cost
 		var is_active: bool = row_id == active_row
-		btn.disabled = busy or on_cooldown
+		btn.disabled = busy or on_cooldown or (unaffordable and not is_active)
 		donut.visible = is_active
 		if is_active:
 			donut.progress = current_progress
@@ -268,6 +274,8 @@ func _refresh_action_states(pet: Dictionary) -> void:
 			name_label.text = row_data.label
 			if on_cooldown:
 				meta_label.text = _format_cooldown(cd_remaining)
+			elif unaffordable:
+				meta_label.text = "%d원 부족" % money_cost
 			else:
 				meta_label.text = _meta_text(template)
 

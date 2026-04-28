@@ -73,9 +73,20 @@
       "duration": 90,
       "effects": {"charisma": 1},
       "money_reward": 0,
+      "money_cost": 1000,
       "color": "#DBC7F7",
       "phases": ["young_adult", "middle_aged", "mature"],
       "requires_club": true
+    },
+    "date": {
+      "label_key": "ACTION_DATE",
+      "progress_label_key": "ACTION_DATE_PROGRESS",
+      "duration": 1,
+      "effects": {},
+      "money_reward": 0,
+      "color": "#FFB6C1",
+      "phases": [],
+      "triggered_only": true
     }
   }
 }

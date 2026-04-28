@@ -1,8 +1,127 @@
-[gd_scene load_steps=4 format=3 uid="uid://b0tamaa0a000c"]
+[gd_scene format=3 uid="uid://c215lj2qrpats"]
 
 [ext_resource type="Script" path="res://scripts/BondDetailModal.gd" id="1_bdm"]
 [ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="2_font"]
 [ext_resource type="PackedScene" path="res://scenes/Tamagotchi.tscn" id="3_tama"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_hangout"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(0.78, 0.88, 0.96, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.65, 0.88, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_hangout_hover"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(0.62, 0.78, 0.92, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.30, 0.50, 0.78, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_gift"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(1.0, 0.86, 0.74, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.92, 0.62, 0.42, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_gift_hover"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(0.96, 0.74, 0.55, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.78, 0.45, 0.25, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_date"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(1.0, 0.78, 0.86, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.92, 0.45, 0.62, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_date_hover"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(0.96, 0.58, 0.72, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.78, 0.30, 0.45, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn_disabled"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(0.92, 0.92, 0.92, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.78, 0.78, 0.78, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+anti_aliasing_size = 1.5
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_panel"]
 content_margin_left = 24.0
@@ -90,7 +209,19 @@ transparent_bg = true
 unique_name_in_owner = true
 scale = Vector2(0.5, 0.5)
 
-[node name="AgeLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
+[node name="Tabs" type="TabContainer" parent="PanelCenter/ModalPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 240)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+
+[node name="상태" type="VBoxContainer" parent="PanelCenter/ModalPanel/VBox/Tabs"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AgeLabel" type="Label" parent="PanelCenter/ModalPanel/VBox/Tabs/상태"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.45, 0.55, 1)
@@ -99,7 +230,7 @@ theme_override_font_sizes/font_size = 16
 text = "1일차 / 1일 (청년기)"
 horizontal_alignment = 1
 
-[node name="JobLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
+[node name="JobLabel" type="Label" parent="PanelCenter/ModalPanel/VBox/Tabs/상태"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.42, 0.32, 0.45, 1)
@@ -109,64 +240,101 @@ text = ""
 horizontal_alignment = 1
 visible = false
 
-[node name="AffectionRow" type="HBoxContainer" parent="PanelCenter/ModalPanel/VBox"]
+[node name="AffectionColumn" type="VBoxContainer" parent="PanelCenter/ModalPanel/VBox/Tabs/상태"]
 layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 18
+theme_override_constants/separation = 4
 
-[node name="AffectionMine" type="Label" parent="PanelCenter/ModalPanel/VBox/AffectionRow"]
+[node name="AffectionMine" type="Label" parent="PanelCenter/ModalPanel/VBox/Tabs/상태/AffectionColumn"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94, 0.55, 0.62, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 16
-text = "내 호감도 ♥ 0"
+text = "내 호감도 0"
+horizontal_alignment = 1
 
-[node name="AffectionTheirs" type="Label" parent="PanelCenter/ModalPanel/VBox/AffectionRow"]
+[node name="AffectionTheirs" type="Label" parent="PanelCenter/ModalPanel/VBox/Tabs/상태/AffectionColumn"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94, 0.55, 0.62, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 16
-text = "상대 호감도 ♥ 0"
+text = "상대의 호감도 0"
+horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="PanelCenter/ModalPanel/VBox"]
+[node name="HSeparator" type="HSeparator" parent="PanelCenter/ModalPanel/VBox/Tabs/상태"]
 layout_mode = 2
+visible = false
 
-[node name="StatsGrid" type="GridContainer" parent="PanelCenter/ModalPanel/VBox"]
+[node name="StatsGrid" type="GridContainer" parent="PanelCenter/ModalPanel/VBox/Tabs/상태"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 6
 columns = 3
+visible = false
 
-[node name="HSeparator2" type="HSeparator" parent="PanelCenter/ModalPanel/VBox"]
+[node name="행동" type="VBoxContainer" parent="PanelCenter/ModalPanel/VBox/Tabs"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TopSpacer" type="Control" parent="PanelCenter/ModalPanel/VBox/Tabs/행동"]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
 
-[node name="ActionsHeading" type="Label" parent="PanelCenter/ModalPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 16
-text = "할 수 있는 항목"
-
-[node name="HangoutButton" type="Button" parent="PanelCenter/ModalPanel/VBox"]
+[node name="HangoutButton" type="Button" parent="PanelCenter/ModalPanel/VBox/Tabs/행동"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.18, 0.32, 0.55, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.55, 0.55, 0.55, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBox_hangout")
+theme_override_styles/hover = SubResource("StyleBox_hangout_hover")
+theme_override_styles/pressed = SubResource("StyleBox_hangout_hover")
+theme_override_styles/focus = SubResource("StyleBox_hangout")
+theme_override_styles/disabled = SubResource("StyleBox_btn_disabled")
 text = "함께 시간 보내기"
 
-[node name="GiftButton" type="Button" parent="PanelCenter/ModalPanel/VBox"]
+[node name="GiftButton" type="Button" parent="PanelCenter/ModalPanel/VBox/Tabs/행동"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.55, 0.30, 0.18, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.55, 0.55, 0.55, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBox_gift")
+theme_override_styles/hover = SubResource("StyleBox_gift_hover")
+theme_override_styles/pressed = SubResource("StyleBox_gift_hover")
+theme_override_styles/focus = SubResource("StyleBox_gift")
+theme_override_styles/disabled = SubResource("StyleBox_btn_disabled")
 text = "선물 주기"
 
-[node name="StatusLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
+[node name="DateButton" type="Button" parent="PanelCenter/ModalPanel/VBox/Tabs/행동"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.55, 0.18, 0.32, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.55, 0.55, 0.55, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBox_date")
+theme_override_styles/hover = SubResource("StyleBox_date_hover")
+theme_override_styles/pressed = SubResource("StyleBox_date_hover")
+theme_override_styles/focus = SubResource("StyleBox_date")
+theme_override_styles/disabled = SubResource("StyleBox_btn_disabled")
+text = "같이 데이트하기"
+
+[node name="StatusLabel" type="Label" parent="PanelCenter/ModalPanel/VBox/Tabs/행동"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.32, 0.55, 1)
@@ -174,10 +342,6 @@ theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 14
 text = ""
 horizontal_alignment = 1
-
-[node name="Spacer" type="Control" parent="PanelCenter/ModalPanel/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
 
 [node name="ConfirmButton" type="Button" parent="PanelCenter/ModalPanel/VBox"]
 unique_name_in_owner = true
