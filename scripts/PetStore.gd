@@ -68,6 +68,10 @@ static func _migrate_pets() -> void:
 		if not pet.has("bond_cooldowns"):
 			pet["bond_cooldowns"] = {}
 			changed = true
+		if not pet.has("happiness"):
+			pet["happiness"] = Stats.HAPPINESS_START
+			pet["happiness_updated_at_minutes"] = now_total
+			changed = true
 		else:
 			# Legacy bond_cooldowns were `{npc_id: until_min}` (hangout-only).
 			# New format: `{"{npc_id}::{action}": until_min}` so each
@@ -255,6 +259,8 @@ static func generate_random_pet(overrides: Dictionary = {}) -> Dictionary:
 		"bonds": {},
 		"action_cooldowns": {},
 		"bond_cooldowns": {},
+		"happiness": Stats.HAPPINESS_START,
+		"happiness_updated_at_minutes": int(GameClock._total_game_minutes),
 	}
 	for k in overrides:
 		pet[k] = overrides[k]

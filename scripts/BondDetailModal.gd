@@ -8,6 +8,8 @@ extends Control
 signal confirmed
 
 const FONT := preload("res://assets/fonts/neodgm.ttf")
+const GENDER_ICON_MALE := preload("res://assets/icons/gender_male.svg")
+const GENDER_ICON_FEMALE := preload("res://assets/icons/gender_female.svg")
 const NAME_COLOR := Color(0.38, 0.2, 0.26, 1)
 const VALUE_COLOR := Color(0.28, 0.28, 0.34, 1)
 const FAINT_COLOR := Color(0.55, 0.5, 0.55, 1)
@@ -30,7 +32,7 @@ const DATE_MAX_CHANCE := 0.95
 
 @onready var npc_tama: Tamagotchi = %NpcTama
 @onready var npc_name_label: Label = %NpcName
-@onready var gender_mark: Label = %GenderMark
+@onready var gender_mark: TextureRect = %GenderMark
 @onready var age_label: Label = %AgeLabel
 @onready var job_label: Label = %JobLabel
 @onready var affection_mine: Label = %AffectionMine
@@ -225,14 +227,16 @@ func _stamp_cooldown(viewer: Dictionary, action: String, minutes: int) -> void:
 	viewer["bond_cooldowns"] = cd
 
 func _apply_gender_mark(gender: String) -> void:
+	# Mars/Venus SVG icons (white stroke) recoloured via modulate. SVGs avoid
+	# the missing-glyph fallback that broke ♂/♀ on the web build.
 	match gender:
 		"male":
-			gender_mark.text = "♂"
-			gender_mark.add_theme_color_override("font_color", MALE_COLOR)
+			gender_mark.texture = GENDER_ICON_MALE
+			gender_mark.modulate = MALE_COLOR
 			gender_mark.visible = true
 		"female":
-			gender_mark.text = "♀"
-			gender_mark.add_theme_color_override("font_color", FEMALE_COLOR)
+			gender_mark.texture = GENDER_ICON_FEMALE
+			gender_mark.modulate = FEMALE_COLOR
 			gender_mark.visible = true
 		_:
 			gender_mark.visible = false

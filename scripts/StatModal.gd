@@ -7,16 +7,20 @@ extends Control
 signal confirmed
 
 const FONT := preload("res://assets/fonts/neodgm.ttf")
+const GENDER_ICON_MALE := preload("res://assets/icons/gender_male.svg")
+const GENDER_ICON_FEMALE := preload("res://assets/icons/gender_female.svg")
 const STAT_LABEL_COLOR := Color(0.38, 0.2, 0.26, 1)
 const STAT_VALUE_COLOR := Color(0.28, 0.28, 0.34, 1)
 const MALE_COLOR := Color(0.30, 0.55, 0.85, 1)
 const FEMALE_COLOR := Color(0.92, 0.40, 0.55, 1)
 
 @onready var character_name_label: Label = %CharacterName
-@onready var gender_mark: Label = %GenderMark
+@onready var gender_mark: TextureRect = %GenderMark
 @onready var age_label: Label = %AgeLabel
 @onready var job_label: Label = %JobLabel
 @onready var salary_label: Label = %SalaryLabel
+@onready var happiness_bar: ProgressBar = %HappinessBar
+@onready var happiness_value: Label = %HappinessValue
 @onready var stats_grid: GridContainer = %StatsGrid
 @onready var clubs_label: Label = %ClubsLabel
 @onready var confirm_button: Button = %ConfirmButton
@@ -87,6 +91,10 @@ func _render(pet: Dictionary) -> void:
 
 	_apply_job_label(pet, alive)
 
+	var hp: int = Stats.current_happiness(pet, now)
+	happiness_bar.value = hp
+	happiness_value.text = "%d/%d" % [hp, Stats.HAPPINESS_MAX]
+
 	var current := Stats.current_stats(pet, now)
 	for k in Stats.KEYS:
 		var v: int = int(current.get(k, 0))
@@ -125,14 +133,16 @@ func _apply_clubs_label(pet: Dictionary) -> void:
 	clubs_label.visible = true
 
 func _apply_gender_mark(gender: String) -> void:
+	# Mars/Venus SVG icons (white stroke) recoloured via modulate. SVGs avoid
+	# the missing-glyph fallback that broke ♂/♀ on the web build.
 	match gender:
 		"male":
-			gender_mark.text = "♂"
-			gender_mark.add_theme_color_override("font_color", MALE_COLOR)
+			gender_mark.texture = GENDER_ICON_MALE
+			gender_mark.modulate = MALE_COLOR
 			gender_mark.visible = true
 		"female":
-			gender_mark.text = "♀"
-			gender_mark.add_theme_color_override("font_color", FEMALE_COLOR)
+			gender_mark.texture = GENDER_ICON_FEMALE
+			gender_mark.modulate = FEMALE_COLOR
 			gender_mark.visible = true
 		_:
 			gender_mark.visible = false

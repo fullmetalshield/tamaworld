@@ -6,6 +6,31 @@
 
 ## 2026-05-07
 
+### 행복도 시스템 추가 (표시 전용)
+- 캐릭터에 능력치와는 별개의 `happiness` (0~100) 추가. 일단 표시 전용 — 다른 시스템(이벤트/출산/능력치)에는 영향 없음.
+- [scripts/Stats.gd](../scripts/Stats.gd):
+  - `HAPPINESS_MIN/MAX/START/DECAY_PER_HOUR` 상수 (시작 70, 시간당 −1).
+  - `current_happiness(pet, now)` — 게으른 디케이 계산. 저장된 `happiness`는 `happiness_updated_at_minutes` 시점의 스냅샷이고, 읽을 때마다 경과 게임-시간만큼 감소시킨 값을 반환. 매 틱 쓰기 없음.
+  - `apply_happiness_delta(pet, now, delta)` — 델타를 적용할 때만 스냅샷을 다시 잡고 타임스탬프 갱신.
+- [scripts/PetStore.gd](../scripts/PetStore.gd):
+  - `generate_random_pet`이 `happiness: 70`, `happiness_updated_at_minutes: GameClock 현재값`로 초기화.
+  - `_migrate_pets`가 기존 세이브에 두 필드를 백필.
+- [scripts/Actions.gd](../scripts/Actions.gd) `_complete`가 액션 카탈로그의 `happiness_delta`를 읽어 적용.
+- [data/actions.json](../data/actions.json) 액션별 행복도 변화량:
+  - play +8, rest +3, club_activity +6, date +12 (즐거운 활동들)
+  - study −4 (공부는 힘들다)
+- [scenes/StatModal.tscn](../scenes/StatModal.tscn) + [scripts/StatModal.gd](../scripts/StatModal.gd): 능력치 그리드 위에 `행복` ProgressBar + `xx/100` 라벨 추가.
+
+### 성별 마크 ♂/♀ → SVG 아이콘
+- 웹 빌드에서 ♂(U+2642) / ♀(U+2640)이 raw codepoint 숫자(`2642`)로 표시되던 문제. Godot 4 웹 빌드는 시스템 폰트 폴백이 없어 neodgm에 없는 글리프가 그대로 깨짐.
+- 처음엔 한글 "남"/"여"로 교체했다가 폰트 의존성 자체를 없애고 **SVG 아이콘**으로 전환 — Mars/Venus 심볼을 흰색 stroke로 그려 [assets/icons/gender_male.svg](../assets/icons/gender_male.svg) / [assets/icons/gender_female.svg](../assets/icons/gender_female.svg) 24×24로 번들. 색상은 `modulate`로 MALE_COLOR/FEMALE_COLOR 적용.
+- [scripts/StatModal.gd](../scripts/StatModal.gd), [scripts/BondDetailModal.gd](../scripts/BondDetailModal.gd):
+  - `gender_mark` 타입 Label → TextureRect.
+  - 두 SVG를 const로 preload(`GENDER_ICON_MALE` / `GENDER_ICON_FEMALE`).
+  - `_apply_gender_mark`가 텍스처 + modulate 세팅으로 단순화.
+- [scenes/StatModal.tscn](../scenes/StatModal.tscn), [scenes/BondDetailModal.tscn](../scenes/BondDetailModal.tscn) GenderMark 노드를 TextureRect로 교체. `expand_mode=1`(IGNORE_SIZE) + `stretch_mode=5`(KEEP_ASPECT_CENTERED) + `custom_minimum_size`로 크기 고정.
+- Godot `--headless --import`로 SVG들을 사전 import 처리해서 .ctex 캐시 + .import 메타파일 생성, 다음 export부터 깔끔히 번들됨.
+
 ### Vercel 배포 파일 리포 루트로 이동
 - 기존 `build/web/vercel.json` + `build/web/serve.js`가 Godot 재export 시 사라지는 문제. Godot이 build/web/ 내 PNG들을 자동 import하면서 `.import` 파일을 만드는 등 디렉토리를 적극적으로 건드리기 때문에, 배포 설정 파일은 **리포 루트**에 두는 게 안전.
 - 신규 [vercel.json](../vercel.json) (리포 루트):

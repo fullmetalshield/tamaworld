@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/BondDetailModal.gd" id="1_bdm"]
 [ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="2_font"]
 [ext_resource type="PackedScene" path="res://scenes/Tamagotchi.tscn" id="3_tama"]
+[ext_resource type="Texture2D" path="res://assets/icons/gender_male.svg" id="4_gendericon"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_hangout"]
 content_margin_left = 18.0
@@ -185,12 +186,15 @@ theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 24
 text = "이름"
 
-[node name="GenderMark" type="Label" parent="PanelCenter/ModalPanel/VBox/HeaderRow"]
+[node name="GenderMark" type="TextureRect" parent="PanelCenter/ModalPanel/VBox/HeaderRow"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "♂"
-vertical_alignment = 1
+size_flags_vertical = 4
+modulate = Color(0.30, 0.55, 0.85, 1)
+texture = ExtResource("4_gendericon")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="StageCenter" type="CenterContainer" parent="PanelCenter/ModalPanel/VBox"]
 layout_mode = 2

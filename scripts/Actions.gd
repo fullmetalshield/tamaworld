@@ -222,6 +222,9 @@ static func _complete(pet: Dictionary) -> Dictionary:
 		var delta: int = int(effects[k])
 		stats[k] = clampi(int(stats.get(k, 5)) + delta, Stats.STAT_MIN, Stats.STAT_MAX)
 	pet["stats"] = stats
+	var happiness_delta: int = int(action.get("happiness_delta", 0))
+	if happiness_delta != 0:
+		Stats.apply_happiness_delta(pet, int(GameClock._total_game_minutes), happiness_delta)
 	var money_reward: int = int(action.get("money_reward", 0))
 	# Only family members fund the family pot. NPCs run actions of their own
 	# but their rewards stay off the player's books.

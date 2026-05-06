@@ -17,6 +17,13 @@ const LABELS := {
 const STAT_MIN := 1
 const STAT_MAX := 10
 
+# Happiness is a separate per-pet meter (0~100), display-only for now.
+# Decays slowly with time and is bumped/dropped by actions and events.
+const HAPPINESS_MIN := 0
+const HAPPINESS_MAX := 100
+const HAPPINESS_START := 70
+const HAPPINESS_DECAY_PER_HOUR := 1
+
 # Day length in game minutes (mirrors GameClock).
 const DAY_MINUTES := 24 * 60
 
@@ -111,6 +118,26 @@ static func current_stats(pet: Dictionary, now_minutes: int) -> Dictionary:
 		var v: int = int(round(float(base.get(k, 5)) * f))
 		out[k] = clampi(v, 0, STAT_MAX)
 	return out
+
+# Lazy-decayed happiness. The stored `happiness` is a snapshot taken at
+# `happiness_updated_at_minutes`; reads compute current value by subtracting
+# (HAPPINESS_DECAY_PER_HOUR per game-hour) elapsed since then. This keeps the
+# decay free of per-tick writes — the snapshot is only rewritten when a delta
+# is applied (see `apply_happiness_delta`).
+static func current_happiness(pet: Dictionary, now_minutes: int) -> int:
+	var stored: int = int(pet.get("happiness", HAPPINESS_START))
+	var since: int = int(pet.get("happiness_updated_at_minutes", now_minutes))
+	var elapsed: int = max(0, now_minutes - since)
+	@warning_ignore("integer_division")
+	var decay: int = (elapsed * HAPPINESS_DECAY_PER_HOUR) / 60
+	return clampi(stored - decay, HAPPINESS_MIN, HAPPINESS_MAX)
+
+static func apply_happiness_delta(pet: Dictionary, now_minutes: int, delta: int) -> void:
+	if delta == 0:
+		return
+	var cur: int = current_happiness(pet, now_minutes)
+	pet["happiness"] = clampi(cur + delta, HAPPINESS_MIN, HAPPINESS_MAX)
+	pet["happiness_updated_at_minutes"] = now_minutes
 
 static func is_alive(pet: Dictionary, now_minutes: int) -> bool:
 	if pet.get("died_at_minutes") != null:

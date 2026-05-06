@@ -5,6 +5,7 @@
       "progress_label_key": "ACTION_PLAY_PROGRESS",
       "duration": 120,
       "effects": {"charisma": 1, "luck": 1},
+      "happiness_delta": 8,
       "money_reward": 5,
       "color": "#FFC7D6",
       "phases": ["toddler", "child", "teen", "young_adult", "middle_aged", "mature"]
@@ -14,6 +15,7 @@
       "progress_label_key": "ACTION_STUDY_PROGRESS",
       "duration": 180,
       "effects": {"intelligence": 1},
+      "happiness_delta": -4,
       "money_reward": 10,
       "color": "#C7D9FF",
       "phases": ["child", "teen", "young_adult", "middle_aged"]
@@ -23,6 +25,7 @@
       "progress_label_key": "ACTION_REST_PROGRESS",
       "duration": 60,
       "effects": {"stamina": 1},
+      "happiness_delta": 3,
       "money_reward": 0,
       "color": "#B8EDD4",
       "phases": ["infant", "toddler", "child", "teen", "young_adult", "middle_aged", "mature", "elder"]
@@ -72,6 +75,7 @@
       "progress_label_key": "ACTION_CLUB_ACTIVITY_PROGRESS",
       "duration": 90,
       "effects": {"charisma": 1},
+      "happiness_delta": 6,
       "money_reward": 0,
       "money_cost": 1000,
       "color": "#DBC7F7",
@@ -83,6 +87,7 @@
       "progress_label_key": "ACTION_DATE_PROGRESS",
       "duration": 120,
       "effects": {},
+      "happiness_delta": 12,
       "money_reward": 0,
       "color": "#FFB6C1",
       "phases": [],

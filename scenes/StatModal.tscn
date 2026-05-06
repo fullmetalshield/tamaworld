@@ -1,7 +1,8 @@
-[gd_scene format=3 uid="uid://b0tamaa0a000a"]
+[gd_scene load_steps=4 format=3 uid="uid://b0tamaa0a000a"]
 
 [ext_resource type="Script" path="res://scripts/StatModal.gd" id="1_stat"]
 [ext_resource type="FontFile" path="res://assets/fonts/neodgm.ttf" id="2_font"]
+[ext_resource type="Texture2D" path="res://assets/icons/gender_male.svg" id="3_gendericon"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_stat_panel"]
 content_margin_left = 24.0
@@ -65,12 +66,15 @@ theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 28
 text = "이름"
 
-[node name="GenderMark" type="Label" parent="PanelCenter/ModalPanel/VBox/HeaderRow"]
+[node name="GenderMark" type="TextureRect" parent="PanelCenter/ModalPanel/VBox/HeaderRow"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "♂"
-vertical_alignment = 1
+size_flags_vertical = 4
+modulate = Color(0.30, 0.55, 0.85, 1)
+texture = ExtResource("3_gendericon")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="AgeLabel" type="Label" parent="PanelCenter/ModalPanel/VBox"]
 unique_name_in_owner = true
@@ -103,6 +107,35 @@ visible = false
 
 [node name="HSeparator" type="HSeparator" parent="PanelCenter/ModalPanel/VBox"]
 layout_mode = 2
+
+[node name="HappinessRow" type="HBoxContainer" parent="PanelCenter/ModalPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HappinessLabel" type="Label" parent="PanelCenter/ModalPanel/VBox/HappinessRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.38, 0.2, 0.26, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "행복"
+
+[node name="HappinessBar" type="ProgressBar" parent="PanelCenter/ModalPanel/VBox/HappinessRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 70.0
+show_percentage = false
+
+[node name="HappinessValue" type="Label" parent="PanelCenter/ModalPanel/VBox/HappinessRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.28, 0.34, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "70/100"
 
 [node name="StatsGrid" type="GridContainer" parent="PanelCenter/ModalPanel/VBox"]
 unique_name_in_owner = true
