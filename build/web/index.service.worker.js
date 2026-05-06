@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1778105031|3678960978';
+const CACHE_VERSION = '1778105755|4403272490';
 /** @type {string} */
 const CACHE_PREFIX = 'TamaWorld-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
