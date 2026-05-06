@@ -301,7 +301,10 @@ func _on_row_pressed(row_id: String) -> void:
 	else:
 		if not Actions.start(pet, action_id):
 			return
-	_refresh_action_states(pet)
+	# Close the modal after committing — the slot indicator on the stage
+	# already shows the in-progress state, so keeping ActModal open just
+	# blocks the view.
+	visible = false
 
 func _on_confirm_pressed() -> void:
 	visible = false

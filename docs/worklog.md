@@ -6,6 +6,9 @@
 
 ## 2026-05-07
 
+### ActModal 행동 선택 시 자동 닫힘
+- [scripts/ActModal.gd](../scripts/ActModal.gd) `_on_row_pressed`가 액션 시작 성공 후 `_refresh_action_states(pet)` 대신 `visible = false`로 모달 닫음. 슬롯 인디케이터(donut + 진행 라벨)에서 이미 진행 상태가 보이므로 모달이 계속 떠 있을 이유 없음. picker 액션이 이미 같은 패턴(닫고 picker 신호 발행)이라 일관성 확보.
+
 ### 탭 비활성화 시 게임 시계 멈춤 → wall-clock 기반으로 전환
 - 브라우저는 비활성 탭의 `requestAnimationFrame`을 멈추거나 1Hz로 throttle. Godot의 `_process(delta)`도 같이 멈춰서 GameClock이 정지 → 다른 탭에서 작업하다 돌아오면 액션 진행이 그대로 머물러있던 문제.
 - [scripts/GameClock.gd](../scripts/GameClock.gd)이 `delta` 누적 → `Time.get_unix_time_from_system()` 기반 wall-clock 차분으로 전환:
