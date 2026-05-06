@@ -3,22 +3,45 @@ extends Node
 # Autoload. Tracks an in-game clock that advances slowly while the app is
 # running. 1 real second = 1 game minute by default (60x scale).
 # Persists across sessions via user://clock.json.
+#
+# We drive the clock from wall-clock (`Time.get_unix_time_from_system`) rather
+# than the per-frame `delta`. On web, the browser pauses requestAnimationFrame
+# while a tab is hidden, so frame-driven deltas would freeze. Wall-clock
+# means: when the tab resumes, the next tick sees the full elapsed real time
+# and the game catches up — actions in progress, NPC auto-picks, etc. behave
+# as if the page never paused.
 
 signal time_changed
 
 const SAVE_PATH := "user://clock.json"
 const GAME_MINUTES_PER_REAL_SECOND := 1.0
 const DAY_START_MINUTES := 8 * 60  # Day 1 begins at 08:00
+# Hard cap on a single tick's catch-up. Without it, leaving the tab hidden
+# overnight would dump 8 hours of game time into one frame and run every
+# pet's tick / action complete sequence in a burst. 5 real-minutes feels
+# generous for "I switched tabs briefly" while preventing surprises.
+const MAX_CATCHUP_REAL_SECONDS := 5.0 * 60.0
 
 var _total_game_minutes: float = float(DAY_START_MINUTES)
+var _last_real_time_sec: float = 0.0
 
 func _ready() -> void:
 	_load()
+	_last_real_time_sec = Time.get_unix_time_from_system()
 	time_changed.emit()
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
+	var now_sec: float = Time.get_unix_time_from_system()
+	var elapsed_sec: float = now_sec - _last_real_time_sec
+	_last_real_time_sec = now_sec
+	if elapsed_sec <= 0.0:
+		return
+	# Clamp huge gaps (tab hidden for hours, system sleep, etc.) so we don't
+	# explode time in a single frame.
+	if elapsed_sec > MAX_CATCHUP_REAL_SECONDS:
+		elapsed_sec = MAX_CATCHUP_REAL_SECONDS
 	var prev_min := int(_total_game_minutes)
-	_total_game_minutes += delta * GAME_MINUTES_PER_REAL_SECOND
+	_total_game_minutes += elapsed_sec * GAME_MINUTES_PER_REAL_SECOND
 	var cur_min := int(_total_game_minutes)
 	if cur_min != prev_min:
 		time_changed.emit()

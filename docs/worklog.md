@@ -6,6 +6,14 @@
 
 ## 2026-05-07
 
+### 탭 비활성화 시 게임 시계 멈춤 → wall-clock 기반으로 전환
+- 브라우저는 비활성 탭의 `requestAnimationFrame`을 멈추거나 1Hz로 throttle. Godot의 `_process(delta)`도 같이 멈춰서 GameClock이 정지 → 다른 탭에서 작업하다 돌아오면 액션 진행이 그대로 머물러있던 문제.
+- [scripts/GameClock.gd](../scripts/GameClock.gd)이 `delta` 누적 → `Time.get_unix_time_from_system()` 기반 wall-clock 차분으로 전환:
+  - `_last_real_time_sec`에 이전 실제 시각을 보관, 매 `_process`마다 현재와 차이를 게임-분으로 환산.
+  - 탭이 다시 활성화되면 그동안 흐른 실제 시간만큼 한 번에 따라잡음.
+  - `MAX_CATCHUP_REAL_SECONDS = 300` (5실분) 캡 — 밤새 닫아두고 와도 한 프레임에 8시간이 쏟아지지 않음. NPC 자동 행동이 과도하게 폭주하지 않도록.
+- 결과: 탭 전환 후 돌아오면 액션 progress가 자연스럽게 50% → 70% → 완료로 진행. 5분 이상 비활성 상태였으면 5분치만 따라잡음(그 이상은 사실상 일시정지로 취급).
+
 ### 새로고침 시 액션 progress 초기화 버그 수정
 - 웹 빌드에서 액션 진행 중 새로고침하면 진행률이 0으로 보이던 문제. [scripts/GameClock.gd](../scripts/GameClock.gd)이 60게임분(=1실분)마다만 `_save()`를 호출했기 때문에:
   - 액션 시작 → `pet.active_action.started_at_minutes = 100.5` 저장
