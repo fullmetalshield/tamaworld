@@ -1,0 +1,39 @@
+# --- Godot 4 ----------------------------------------------------------------
+# Editor cache, import metadata, exported intermediate files. Includes
+# .godot/export_credentials.cfg (NEVER commit — contains PCK encryption keys
+# and platform signing creds) and .godot/exported/ (build cache, regenerated
+# by every export).
+.godot/
+*.tmp
+*.translation
+
+# --- Vercel -----------------------------------------------------------------
+# `.vercel/` — created by `vercel link` / `vercel pull`, holds project + org
+#   IDs. Not secret but re-links per-machine.
+# `.env*.local` — `vercel env pull` writes secrets here (API keys, tokens).
+# `.vercel-output/` — output dir from `vercel build` (Build Output API).
+# `.now/` — legacy Now.sh alias (Vercel CLI < v17), still occasionally
+#   created when migrating from old configs.
+.vercel/
+.env
+.env.local
+.env.*.local
+.vercel-output/
+.now/
+
+# --- Web build outputs ------------------------------------------------------
+# build/web/ ITSELF is committed so Vercel deploys the static export. Only
+# scrub auto-generated import metadata Godot drops in there + dev artefacts.
+build/web/*.import
+build/web/.DS_Store
+
+# --- Tooling ----------------------------------------------------------------
+tools/catalog-editor/node_modules/
+tools/catalog-editor/dist/
+
+# --- OS / editor ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

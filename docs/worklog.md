@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-05-07
+
+### Vercel 배포 파일 리포 루트로 이동
+- 기존 `build/web/vercel.json` + `build/web/serve.js`가 Godot 재export 시 사라지는 문제. Godot이 build/web/ 내 PNG들을 자동 import하면서 `.import` 파일을 만드는 등 디렉토리를 적극적으로 건드리기 때문에, 배포 설정 파일은 **리포 루트**에 두는 게 안전.
+- 신규 [vercel.json](../vercel.json) (리포 루트):
+  - 헤더: COOP/COEP/CORP + `.wasm` MIME 타입.
+  - **rewrites**: `/` → `/build/web/index.html`, `/:path*` → `/build/web/:path*`. 사용자가 보는 URL은 `tamaworld.vercel.app/`이지만 내부적으로 build/web/에서 서빙.
+- 신규 [.vercelignore](../.vercelignore) — Godot 소스(scripts/scenes/shaders/assets/...), tools, docs, 에디터 파일을 deploy 업로드에서 제외. 결과적으로 build/web/ + vercel.json만 Vercel CDN으로 올라감.
+- [serve.js](../serve.js)도 리포 루트로 이동, `BUILD_DIR = path.join(__dirname, 'build', 'web')`로 build/web/에서 서빙. `node serve.js`로 실행, http://localhost:8080.
+- [.gitignore](../.gitignore)에 `build/web/*.import` 추가 — Godot이 build/web 내부 PNG들에 만들어내는 import 메타파일은 배포에 불필요.
+- **Vercel 프로젝트 설정에서 Root Directory 변경 불필요** — repo root 기본값 그대로 두면 vercel.json이 알아서 라우팅.
+
+---
+
 ## 2026-04-29
 
 ### 동호회 활동 비용 (money_cost 카탈로그 필드)

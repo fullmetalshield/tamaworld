@@ -1,0 +1,34 @@
+# Vercel deploy strips everything except the actual web bundle. The Godot
+# source tree, docs, tooling, and editor artefacts have no business shipping
+# to the CDN. Keep this list narrow — anything not explicitly excluded gets
+# uploaded.
+
+# Godot project sources (re-bundled into build/web/index.pck during export)
+.godot/
+assets/
+data/
+scenes/
+scripts/
+shaders/
+translations/
+*.gd
+*.tscn
+*.gdshader
+*.cfg
+*.import
+icon.svg
+icon.svg.import
+project.godot
+export_presets.cfg
+
+# Repo meta + tooling
+.git/
+.github/
+docs/
+tools/
+README.md
+CLAUDE.md
+inspect_main.gd.uid
+
+# Local dev helpers (not needed on the CDN)
+serve.js
