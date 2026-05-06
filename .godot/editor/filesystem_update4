@@ -1,9 +1,0 @@
-res://scenes/BondDetailModal.tscn
-res://scenes/StatModal.tscn
-res://scripts/Actions.gd
-res://scripts/BondDetailModal.gd
-res://scripts/PetStore.gd
-res://scripts/StatModal.gd
-res://scripts/Stats.gd
-res://scripts/GameClock.gd
-res://scripts/ActModal.gd
