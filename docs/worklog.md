@@ -6,6 +6,15 @@
 
 ## 2026-05-07
 
+### 새로고침 시 액션 progress 초기화 버그 수정
+- 웹 빌드에서 액션 진행 중 새로고침하면 진행률이 0으로 보이던 문제. [scripts/GameClock.gd](../scripts/GameClock.gd)이 60게임분(=1실분)마다만 `_save()`를 호출했기 때문에:
+  - 액션 시작 → `pet.active_action.started_at_minutes = 100.5` 저장
+  - GameClock은 60-min 경계 사이라 clock.json은 여전히 `total = 60` 상태
+  - 새로고침 → 시계는 60으로 되돌아가는데 액션은 100.5에 시작한 것으로 → `progress = (60 - 100.5)/dur` 음수 → clamp(0)
+- 두 단계 수정:
+  1. [scripts/GameClock.gd](../scripts/GameClock.gd)에 public `save()` 메서드 추가, 저장 주기 60 → 1 게임분(=1실초)으로 단축. 웹 IndexedDB는 작은 write 부담 없음.
+  2. [scripts/PetStore.gd](../scripts/PetStore.gd) `persist()`가 끝에 `GameClock.save()` 호출 — pet 상태와 시계가 항상 같은 시점의 스냅샷이 되도록 묶음.
+
 ### 행복도 시스템 추가 (표시 전용)
 - 캐릭터에 능력치와는 별개의 `happiness` (0~100) 추가. 일단 표시 전용 — 다른 시스템(이벤트/출산/능력치)에는 영향 없음.
 - [scripts/Stats.gd](../scripts/Stats.gd):

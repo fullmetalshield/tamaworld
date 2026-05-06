@@ -5,3 +5,4 @@ res://scripts/BondDetailModal.gd
 res://scripts/PetStore.gd
 res://scripts/StatModal.gd
 res://scripts/Stats.gd
+res://scripts/GameClock.gd

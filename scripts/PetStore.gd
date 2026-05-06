@@ -178,6 +178,10 @@ static func persist() -> void:
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify(_pets))
+	# Pet `active_action.started_at_minutes` is a snapshot of GameClock at
+	# write time. If the clock isn't saved alongside, a refresh restores old
+	# clock + new pet state and active actions appear to restart at 0%.
+	GameClock.save()
 
 static func reset() -> void:
 	_pets = []

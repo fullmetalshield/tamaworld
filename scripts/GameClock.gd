@@ -22,8 +22,11 @@ func _process(delta: float) -> void:
 	var cur_min := int(_total_game_minutes)
 	if cur_min != prev_min:
 		time_changed.emit()
-		if cur_min % 60 == 0:
-			_save()
+		# Save every game-minute (~1 real-second). On the web build user://
+		# maps to IndexedDB, so a tiny write per second is cheap. Coarser
+		# intervals leave action progress out of sync with the clock and
+		# look "reset" after a refresh.
+		_save()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
@@ -69,6 +72,13 @@ func _load() -> void:
 		var data: Variant = JSON.parse_string(text)
 		if data is Dictionary:
 			_total_game_minutes = float(data.get("total_game_minutes", DAY_START_MINUTES))
+
+func save() -> void:
+	# Public — call alongside PetStore.persist() so the clock and pets stay
+	# in sync. Without this, refreshing mid-action would load old clock +
+	# new pet state, making started_at_minutes look future-dated and the
+	# progress collapse to 0.
+	_save()
 
 func _save() -> void:
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
